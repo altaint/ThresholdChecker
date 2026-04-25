@@ -12,7 +12,7 @@ env:
   PUBLIC_NAME: ThresholdChecker
   SOLUTION_NAME: ThresholdChecker
   INTERNAL_NAME: ThresholdChecker
-  RELEASE_DIR: ThresholdChecker\bin\Release\ThresholdChecker
+  RELEASE_DIR: ThresholdChecker\bin\x64\Release\ThresholdChecker
   PERSONAL_PLUGIN_REPO: altaint/MyDalamudPlugins
   PR_PLUGIN_REPO: altaint/DalamudPlugins
 
