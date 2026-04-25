@@ -52,8 +52,10 @@ namespace ThresholdChecker
         private ulong trackedObjectId = 0;
         private DateTime? combatStartTime = null;
 
-        public Plugin()
+        public Plugin(IDalamudPluginInterface pluginInterface)
         {
+            pluginInterface.Create<Service>();
+
             Configuration = Service.PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
 
             MainWindow = new MainWindow(this);
