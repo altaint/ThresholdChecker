@@ -1,0 +1,11 @@
+{
+  "Author": "altan",
+  "Name": "Threshold Checker",
+  "Punchline": "Checks boss health against time thresholds.",
+  "Description": "Simple tool to check boss health when sandbagging.",
+  "ApplicableVersion": "any",
+  "Tags": [
+    "plugin",
+	"dps"
+  ]
+}
