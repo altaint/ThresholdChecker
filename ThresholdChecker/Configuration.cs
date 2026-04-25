@@ -63,7 +63,7 @@ namespace ThresholdChecker
 
         public void Save()
         {
-            Plugin.PluginInterface.SavePluginConfig(this);
+            Service.PluginInterface.SavePluginConfig(this);
         }
     }
 }

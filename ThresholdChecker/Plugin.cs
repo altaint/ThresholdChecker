@@ -1,5 +1,4 @@
 using Dalamud.Game.Command;
-using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using Dalamud.Interface.Windowing;
@@ -21,15 +20,6 @@ namespace ThresholdChecker
     public sealed class Plugin : IDalamudPlugin
     {
         public string Name => "Threshold Checker";
-
-        [PluginService] public static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
-        [PluginService] public static IChatGui Chat { get; private set; } = null!;
-        [PluginService] public static ITargetManager TargetManager { get; private set; } = null!;
-        [PluginService] public static IFramework Framework { get; private set; } = null!;
-        [PluginService] public static ICommandManager CommandManager { get; private set; } = null!;
-        [PluginService] public static ICondition Condition { get; private set; } = null!;
-        [PluginService] public static IDataManager DataManager { get; private set; } = null!;
-        [PluginService] public static IClientState ClientState { get; private set; } = null!;
 
         private const string CommandName = "/trackboss";
         
@@ -64,7 +54,7 @@ namespace ThresholdChecker
 
         public Plugin()
         {
-            Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
+            Configuration = Service.PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
 
             MainWindow = new MainWindow(this);
             ConfigWindow = new ConfigWindow(this);
@@ -72,33 +62,33 @@ namespace ThresholdChecker
             WindowSystem.AddWindow(MainWindow);
             WindowSystem.AddWindow(ConfigWindow);
 
-            PluginInterface.UiBuilder.Draw += DrawUI;
-            PluginInterface.UiBuilder.OpenMainUi += ToggleMainUi;
-            PluginInterface.UiBuilder.OpenConfigUi += ToggleConfigUi;
+            Service.PluginInterface.UiBuilder.Draw += DrawUI;
+            Service.PluginInterface.UiBuilder.OpenMainUi += ToggleMainUi;
+            Service.PluginInterface.UiBuilder.OpenConfigUi += ToggleConfigUi;
 
-            CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
+            Service.CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
             {
                 HelpMessage = "Opens the Threshold Checker UI.\n" +
                 $"{CommandName} print → Prints the current tracking status to chat.\n"
             });
 
-            Framework.Update += OnFrameworkUpdate;
-            ClientState.TerritoryChanged += OnTerritoryChanged;
+            Service.Framework.Update += OnFrameworkUpdate;
+            Service.ClientState.TerritoryChanged += OnTerritoryChanged;
         }
 
         public void Dispose()
         {
-            PluginInterface.UiBuilder.Draw -= DrawUI;
-            PluginInterface.UiBuilder.OpenMainUi -= ToggleMainUi;
-            PluginInterface.UiBuilder.OpenConfigUi -= ToggleConfigUi;
+            Service.PluginInterface.UiBuilder.Draw -= DrawUI;
+            Service.PluginInterface.UiBuilder.OpenMainUi -= ToggleMainUi;
+            Service.PluginInterface.UiBuilder.OpenConfigUi -= ToggleConfigUi;
 
             WindowSystem.RemoveAllWindows();
             MainWindow.Dispose();
             ConfigWindow.Dispose();
 
-            Framework.Update -= OnFrameworkUpdate;
-            ClientState.TerritoryChanged -= OnTerritoryChanged;
-            CommandManager.RemoveHandler(CommandName);
+            Service.Framework.Update -= OnFrameworkUpdate;
+            Service.ClientState.TerritoryChanged -= OnTerritoryChanged;
+            Service.CommandManager.RemoveHandler(CommandName);
         }
 
         private void DrawUI() => WindowSystem.Draw();
@@ -123,7 +113,7 @@ namespace ThresholdChecker
             {
                 if (fromCommand)
                 {
-                    Chat.PrintError("Cannot print: No target is currently being tracked.");
+                    Service.Chat.PrintError("Cannot print: No target is currently being tracked.");
                     return;
                 }
             }
@@ -132,7 +122,7 @@ namespace ThresholdChecker
             {
                 if (fromCommand)
                 {
-                    Chat.PrintError("Cannot print: The first threshold has not been evaluated yet.");
+                    Service.Chat.PrintError("Cannot print: The first threshold has not been evaluated yet.");
                 }
                 return;
             }
@@ -159,7 +149,7 @@ namespace ThresholdChecker
                 _ => XivChatType.Echo
             };
 
-            Chat.Print(new XivChatEntry
+            Service.Chat.Print(new XivChatEntry
             {
                 Type = chatType,
                 Message = chatMessage
@@ -183,14 +173,14 @@ namespace ThresholdChecker
                 return;
             }
 
-            var target = TargetManager.Target;
+            var target = Service.TargetManager.Target;
             if (target == null)
             {
                 ErrorMessage = "You don't have a target to track!";
                 return;
             }
 
-            var currentTerritoryId = ClientState.TerritoryType;
+            var currentTerritoryId = Service.ClientState.TerritoryType;
             var currentDutyConfig = Configuration.Duties.FirstOrDefault(d => d.TerritoryId == currentTerritoryId);
 
             if (currentDutyConfig == null)
@@ -233,7 +223,7 @@ namespace ThresholdChecker
         {
             if (!isTracking) { return; }
 
-            bool inCombat = Condition[ConditionFlag.InCombat];
+            bool inCombat = Service.Condition[ConditionFlag.InCombat];
             if (inCombat)
             {
                 if (combatStartTime == null)
@@ -255,7 +245,7 @@ namespace ThresholdChecker
                 CurrentPace = PacingState.OnTrack;
             }
 
-            var target = TargetManager.Target;
+            var target = Service.TargetManager.Target;
 
             if (target != null && target.GameObjectId == trackedObjectId)
             {

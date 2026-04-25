@@ -148,7 +148,7 @@ public class ConfigWindow : Window, IDisposable
 
         ImGui.SetNextItemWidth(250f);
 
-        var dutySheet = Plugin.DataManager.GetExcelSheet<ContentFinderCondition>();
+        var dutySheet = Service.DataManager.GetExcelSheet<ContentFinderCondition>();
         string dutyPreviewName = "Search for a duty...";
 
         if (newSelectedDutyId != 0 && dutySheet != null)
@@ -186,9 +186,9 @@ public class ConfigWindow : Window, IDisposable
         ImGui.SameLine();
         if (ImGui.Button("Select Current Duty"))
         {
-            if (dutySheet != null && Plugin.ClientState != null)
+            if (dutySheet != null && Service.ClientState != null)
             {
-                var currentTerritoryId = Plugin.ClientState.TerritoryType;
+                var currentTerritoryId = Service.ClientState.TerritoryType;
                 
                 var activeDuty = dutySheet.FirstOrDefault(r => r.TerritoryType.RowId == currentTerritoryId);
                 
@@ -277,7 +277,7 @@ public class ConfigWindow : Window, IDisposable
         
         ImGui.SetNextItemWidth(250f);
 
-        var npcSheet = Plugin.DataManager.GetExcelSheet<BNpcName>();
+        var npcSheet = Service.DataManager.GetExcelSheet<BNpcName>();
         string targetPreviewName = "Search for a Battle NPC...";
 
         if (newSelectedTargetId != 0 && npcSheet != null)
@@ -328,9 +328,9 @@ public class ConfigWindow : Window, IDisposable
         ImGui.SameLine();
         if (ImGui.Button("Select Current Target"))
         {
-            if (npcSheet != null && Plugin.TargetManager != null)
+            if (npcSheet != null && Service.TargetManager != null)
             {
-                var activeTarget = Plugin.TargetManager.Target;
+                var activeTarget = Service.TargetManager.Target;
                 if (activeTarget != null && activeTarget is Dalamud.Game.ClientState.Objects.Types.IBattleNpc bnpc)
                 {
                     var bnpcNameId = bnpc.NameId;
@@ -449,7 +449,7 @@ public class ConfigWindow : Window, IDisposable
 
     public override void OnOpen()
     {
-        var currentTerritoryId = Plugin.ClientState?.TerritoryType ?? 0;
+        var currentTerritoryId = Service.ClientState?.TerritoryType ?? 0;
         if (currentTerritoryId == 0)
         {
             return;
