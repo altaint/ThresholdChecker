@@ -54,7 +54,7 @@ namespace ThresholdChecker
         public PacingState CurrentPace { get; private set; }
 
         public ThresholdResult? LastResult { get; private set; }
-        private ThresholdPhase? _lastEvaluatedThreshold;
+        public ThresholdPhase? LastEvaluatedThreshold { get; private set; }
 
         public string ErrorMessage { get; private set; } = string.Empty;
 
@@ -78,7 +78,8 @@ namespace ThresholdChecker
 
             CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
             {
-                HelpMessage = "Opens the Threshold Checker UI."
+                HelpMessage = "Opens the Threshold Checker UI.\n" +
+                $"{CommandName} print → Prints the current tracking status to chat.\n"
             });
 
             Framework.Update += OnFrameworkUpdate;
@@ -176,7 +177,7 @@ namespace ThresholdChecker
                 CurrentHpPercent = 0;
                 NextThreshold = null;
                 LastResult = null;
-                _lastEvaluatedThreshold = null;
+                LastEvaluatedThreshold = null;
                 CurrentTargetConfig = null;
                 IsPhase2 = false;
                 return;
@@ -212,7 +213,7 @@ namespace ThresholdChecker
             isTracking = true;
             IsPhase2 = false;
             LastResult = null;
-            _lastEvaluatedThreshold = null;
+            LastEvaluatedThreshold = null;
         }
 
         public void TogglePhase(bool isPhase2)
@@ -221,7 +222,7 @@ namespace ThresholdChecker
             {
                 IsPhase2 = isPhase2;
                 LastResult = null;
-                _lastEvaluatedThreshold = null;
+                LastEvaluatedThreshold = null;
                 NextThreshold = null;
                 ProjectedHpPercent = 100.0;
                 CurrentPace = PacingState.OnTrack;
@@ -247,7 +248,7 @@ namespace ThresholdChecker
                 combatStartTime = null;
                 CombatDuration = TimeSpan.Zero;
                 NextThreshold = null;
-                _lastEvaluatedThreshold = null;
+                LastEvaluatedThreshold = null;
                 
                 LastResult = null;
                 ProjectedHpPercent = 100.0;
@@ -280,19 +281,19 @@ namespace ThresholdChecker
                 var thresholds = activeThresholds.OrderBy(t => t.TotalSeconds).ToList();
                 var currentNext = thresholds.FirstOrDefault(t => t.TotalSeconds > CombatDuration.TotalSeconds);
 
-                if (_lastEvaluatedThreshold != null && currentNext != _lastEvaluatedThreshold)
+                if (LastEvaluatedThreshold != null && currentNext != LastEvaluatedThreshold)
                 {
-                    if (CombatDuration.TotalSeconds >= _lastEvaluatedThreshold.TotalSeconds)
+                    if (CombatDuration.TotalSeconds >= LastEvaluatedThreshold.TotalSeconds)
                     {
                         LastResult = new ThresholdResult
                         {
-                            Threshold = _lastEvaluatedThreshold,
+                            Threshold = LastEvaluatedThreshold,
                             ActualHpAtThreshold = CurrentHpPercent
                         };
                     }
                 }
 
-                _lastEvaluatedThreshold = currentNext;
+                LastEvaluatedThreshold = currentNext;
                 NextThreshold = currentNext;
                 
                 if (NextThreshold != null)
@@ -329,7 +330,7 @@ namespace ThresholdChecker
                 CurrentHpPercent = 0;
                 NextThreshold = null;
                 LastResult = null;
-                _lastEvaluatedThreshold = null;
+                LastEvaluatedThreshold = null;
                 CurrentTargetConfig = null;
                 ErrorMessage = string.Empty;
             }
