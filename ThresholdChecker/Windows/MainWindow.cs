@@ -13,7 +13,7 @@ namespace ThresholdChecker.Windows
             : base("Threshold Checker###Threshold Checker", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
         {
             this.plugin = plugin;
-            
+
             SizeConstraints = new WindowSizeConstraints
             {
                 MinimumSize = new Vector2(300, 320),
@@ -131,7 +131,7 @@ namespace ThresholdChecker.Windows
                 
                 if (ImGui.Button("Print Status to Chat", new Vector2(0, 24)))
                 {
-                    plugin.PrintStatusToChat(false);
+                    plugin.ChatManager.PrintStatusToChat(false);
                 }
                 
                 if (!canPrint) ImGui.EndDisabled();

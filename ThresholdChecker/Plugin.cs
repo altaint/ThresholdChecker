@@ -6,7 +6,6 @@ using Dalamud.Game.ClientState.Conditions;
 using System;
 using System.Linq;
 using ThresholdChecker.Windows;
-using Dalamud.Game.Text;
 
 namespace ThresholdChecker
 {
@@ -52,12 +51,16 @@ namespace ThresholdChecker
         private ulong trackedObjectId = 0;
         private DateTime? combatStartTime = null;
 
+
+        public ChatManager ChatManager { get; init; }
+
         public Plugin(IDalamudPluginInterface pluginInterface)
         {
             pluginInterface.Create<Service>();
 
             Configuration = Service.PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
 
+            ChatManager = new ChatManager(this);
             MainWindow = new MainWindow(this);
             ConfigWindow = new ConfigWindow(this);
             
@@ -101,61 +104,12 @@ namespace ThresholdChecker
         {
             if (args.Trim().Equals("print", StringComparison.OrdinalIgnoreCase))
             {
-                PrintStatusToChat(true);
+                ChatManager.PrintStatusToChat(true);
             }
             else
             {
                 ToggleMainUi();
             }
-        }
-
-        public void PrintStatusToChat(bool fromCommand = false)
-        {
-            if (!isTracking)
-            {
-                if (fromCommand)
-                {
-                    Service.Chat.PrintError("Cannot print: No target is currently being tracked.");
-                    return;
-                }
-            }
-
-            if (LastResult == null)
-            {
-                if (fromCommand)
-                {
-                    Service.Chat.PrintError("Cannot print: The first threshold has not been evaluated yet.");
-                }
-                return;
-            }
-
-            string chatMessage = CurrentPace switch
-            {
-                PacingState.TooFast => Configuration?.TooFastMessage ?? "Too Fast",
-                PacingState.Behind => Configuration?.BehindMessage ?? "Behind",
-                _ => Configuration?.OnTrackMessage ?? "On Track"
-            };
-
-            var diff = Math.Abs(LastResult.Difference);
-            chatMessage = chatMessage.Replace("{diff}", diff.ToString("F2"));
-
-            var channel = Configuration?.OutputChannel ?? ChatChannel.Echo;
-
-            var chatType = channel switch
-            {
-                ChatChannel.Party => XivChatType.Party,
-                ChatChannel.Alliance => XivChatType.Alliance,
-                ChatChannel.Say => XivChatType.Say,
-                ChatChannel.Yell => XivChatType.Yell,
-                ChatChannel.Shout => XivChatType.Shout,
-                _ => XivChatType.Echo
-            };
-
-            Service.Chat.Print(new XivChatEntry
-            {
-                Type = chatType,
-                Message = chatMessage
-            });
         }
 
         public void ToggleTracking()
