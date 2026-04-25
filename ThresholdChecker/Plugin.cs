@@ -132,8 +132,8 @@ namespace ThresholdChecker
                 if (fromCommand)
                 {
                     Chat.PrintError("Cannot print: The first threshold has not been evaluated yet.");
-                    return;
                 }
+                return;
             }
 
             string chatMessage = CurrentPace switch
