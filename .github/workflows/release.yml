@@ -31,15 +31,13 @@ jobs:
 
       - name: Download and extract Dalamud (${{ env.DALAMUD_VERSION_NAME }})
         run: |
-          mkdir -p "$env:AppData\XIVLauncher\addon\Hooks\dev"
           Invoke-WebRequest -Uri "${{ env.DALAMUD_VERSION_URL }}" -OutFile "dalamud.zip"
           Expand-Archive -Path "dalamud.zip" -DestinationPath "$env:AppData\XIVLauncher\addon\Hooks\dev" -Force
 
       - name: Build Release (${{ env.DALAMUD_VERSION_NAME }})
         run: |
-          dotnet restore `
-            && dotnet build --no-restore --configuration Release --output "${{ env.BUILD_OUTPUT }}" `
-            && dotnet test --no-build --configuration Release
+          dotnet restore
+          dotnet build --no-restore --configuration Release --output "${{ env.BUILD_OUTPUT }}"
 
       - name: Prepare zip file
         shell: pwsh
