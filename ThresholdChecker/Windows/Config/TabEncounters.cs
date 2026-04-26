@@ -120,24 +120,6 @@ public class TabEncounters : IDisposable
             ImGui.EndCombo();
         }
 
-        ImGui.SameLine();
-        if (ImGui.Button("Select Current Duty"))
-        {
-            if (dutySheet != null && Service.ClientState != null)
-            {
-                var currentTerritoryId = Service.ClientState.TerritoryType;
-
-                var activeDuty = dutySheet.FirstOrDefault(r => r.TerritoryType.RowId == currentTerritoryId);
-
-                if (activeDuty.RowId != 0)
-                {
-                    newSelectedDutyId = activeDuty.RowId;
-                    dutySearchFilter = "";
-                }
-            }
-        }
-
-        ImGui.SameLine();
         if (ImGui.Button("Add Duty") && newSelectedDutyId != 0 && dutySheet != null)
         {
             var row = dutySheet.GetRow(newSelectedDutyId);
@@ -166,9 +148,66 @@ public class TabEncounters : IDisposable
             }
         }
 
+        ImGui.SameLine();
+        ImGui.TextColored(new Vector4(0.75f, 0.75f, 0.75f, 1.0f), " / ");
+
+        ContentFinderCondition activeDuty = default;
+        var inDuty = false;
+        if (dutySheet != null && Service.ClientState != null)
+        {
+            var currentTerritoryId = Service.ClientState.TerritoryType;
+            activeDuty = dutySheet.FirstOrDefault(r => r.TerritoryType.RowId == currentTerritoryId);
+            inDuty = activeDuty.RowId != 0;
+        }
+
+        ImGui.SameLine();
+        if (!inDuty)
+        {
+            ImGui.PushStyleVar(ImGuiStyleVar.Alpha, 0.5f);
+        }
+
+        var addCurrentPressed = ImGui.Button("Add Current Duty");
+
+        if (!inDuty)
+        {
+            ImGui.PopStyleVar();
+        }
+
+        if (!inDuty && ImGui.IsItemHovered())
+        {
+            ImGui.SetTooltip("You must be in a duty.");
+        }
+
+        if (addCurrentPressed && inDuty)
+        {
+            var territoryId = activeDuty.TerritoryType.RowId;
+
+            if (configuration.Duties.Any(d => d.TerritoryId == territoryId))
+            {
+                addDutyError = "Duty already added!";
+                addDutyErrorTime = DateTime.Now;
+            }
+            else
+            {
+                var newDuty = new DutyConfig
+                {
+                    DutyName = activeDuty.Name.ToString(),
+                    TerritoryId = territoryId
+                };
+
+                configuration.Duties.Add(newDuty);
+
+                selectedDutyIndex = configuration.Duties.Count - 1;
+                selectedTargetIndex = -1;
+                newSelectedDutyId = 0;
+                dutySearchFilter = "";
+                configuration.Save();
+            }
+        }
+
+        ImGui.SameLine();
         if (addDutyErrorTime.HasValue && DateTime.Now - addDutyErrorTime.Value < saveMessageDuration)
         {
-            ImGui.SameLine();
             ImGui.TextColored(new Vector4(1.0f, 0.0f, 0.0f, 1.0f), addDutyError);
         }
 
@@ -281,25 +320,6 @@ public class TabEncounters : IDisposable
             ImGui.EndCombo();
         }
 
-        ImGui.SameLine();
-        if (ImGui.Button("Select Current Target"))
-        {
-            if (npcSheet != null && Service.TargetManager != null)
-            {
-                var activeTarget = Service.TargetManager.Target;
-                if (activeTarget != null && activeTarget is Dalamud.Game.ClientState.Objects.Types.IBattleNpc bnpc)
-                {
-                    var bnpcNameId = bnpc.NameId;
-                    if (bnpcNameId != 0)
-                    {
-                        newSelectedTargetId = bnpcNameId;
-                        targetSearchFilter = "";
-                    }
-                }
-            }
-        }
-
-        ImGui.SameLine();
         if (ImGui.Button("Add Target") && newSelectedTargetId != 0 && npcSheet != null)
         {
             var row = npcSheet.GetRow(newSelectedTargetId);
@@ -325,6 +345,64 @@ public class TabEncounters : IDisposable
                 configuration.Save();
             }
         }
+
+        ImGui.SameLine();
+
+        ImGui.TextColored(new Vector4(0.75f, 0.75f, 0.75f, 1.0f), " / ");
+
+        var canAddCurrentTarget = false;
+        Dalamud.Game.ClientState.Objects.Types.IBattleNpc activeBnpc = null;
+        if (npcSheet != null && Service.TargetManager != null && Service.ClientState != null && selectedDutyIndex >= 0)
+        {
+            var clientTerritory = Service.ClientState.TerritoryType;
+            var inSelectedDuty = clientTerritory == currentDuty.TerritoryId;
+            var t = Service.TargetManager.Target;
+            if (inSelectedDuty && t is Dalamud.Game.ClientState.Objects.Types.IBattleNpc bnpc && bnpc.NameId != 0)
+            {
+                canAddCurrentTarget = true;
+                activeBnpc = bnpc;
+            }
+        }
+
+        ImGui.SameLine();
+        if (!canAddCurrentTarget) ImGui.PushStyleVar(ImGuiStyleVar.Alpha, 0.5f);
+
+        var addCurrentTargetPressed = ImGui.Button("Add Current Target");
+
+        if (!canAddCurrentTarget) ImGui.PopStyleVar();
+
+        if (!canAddCurrentTarget && ImGui.IsItemHovered())
+        {
+            ImGui.SetTooltip("You must be in the same duty as the selected duty and have a current target.");
+        }
+
+        if (addCurrentTargetPressed && canAddCurrentTarget && activeBnpc != null)
+        {
+            var bnpcNameId = activeBnpc.NameId;
+            var row = npcSheet.GetRow(bnpcNameId);
+            var addName = row.Singular.ToString();
+
+            if (!string.IsNullOrEmpty(addName) && char.IsLower(addName[0]))
+                addName = char.ToUpper(addName[0]) + addName.Substring(1);
+
+            if (currentDuty.Targets.Any(t => t.TargetName.Equals(addName, StringComparison.OrdinalIgnoreCase)))
+            {
+                addTargetError = "Target already added!";
+                addTargetErrorTime = DateTime.Now;
+            }
+            else
+            {
+                currentDuty.Targets.Add(new TargetConfig { TargetName = addName });
+
+                selectedTargetIndex = currentDuty.Targets.Count - 1;
+                newSelectedTargetId = 0;
+                targetSearchFilter = "";
+                configuration.Save();
+            }
+        }
+
+        ImGui.SameLine();
+
 
         if (addTargetErrorTime.HasValue && DateTime.Now - addTargetErrorTime.Value < saveMessageDuration)
         {
