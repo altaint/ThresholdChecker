@@ -4,6 +4,7 @@ using Dalamud.Plugin.Services;
 using Dalamud.Interface.Windowing;
 using System;
 using ThresholdChecker.Windows;
+using ThresholdChecker.Windows.Config;
 
 namespace ThresholdChecker
 {
