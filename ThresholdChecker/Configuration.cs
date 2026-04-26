@@ -57,9 +57,9 @@ namespace ThresholdChecker
 
         public ChatChannel OutputChannel { get; set; } = ChatChannel.Echo;
 
-        public string TooFastMessage { get; set; } = "Pace is too fast by {diff}%! Hold DPS.";
+        public string TooFastMessage { get; set; } = "Pace is too fast by {diff}%! Hold Damage.";
         public string OnTrackMessage { get; set; } = "Pace is on track. (Off by {diff}%)";
-        public string BehindMessage { get; set; } = "Pace is behind by {diff}%! Push DPS.";
+        public string BehindMessage { get; set; } = "Pace is behind by {diff}%! Push Damage.";
 
         public void Save()
         {

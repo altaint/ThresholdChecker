@@ -14,7 +14,7 @@ namespace ThresholdChecker
 
         public void PrintStatusToChat(bool fromCommand = false)
         {
-            if (!plugin.IsTracking)
+            if (!plugin.Tracker.IsTracking)
             {
                 if (fromCommand)
                 {
@@ -23,7 +23,7 @@ namespace ThresholdChecker
                 return;
             }
 
-            if (plugin.LastResult == null)
+            if (plugin.Tracker.LastResult == null)
             {
                 if (fromCommand)
                 {
@@ -32,14 +32,14 @@ namespace ThresholdChecker
                 return;
             }
 
-            string chatMessage = plugin.CurrentPace switch
+            string chatMessage = plugin.Tracker.CurrentPace switch
             {
                 PacingState.TooFast => plugin.Configuration?.TooFastMessage ?? "Too Fast",
                 PacingState.Behind => plugin.Configuration?.BehindMessage ?? "Behind",
                 _ => plugin.Configuration?.OnTrackMessage ?? "On Track"
             };
 
-            var diff = Math.Abs(plugin.LastResult.Difference);
+            var diff = Math.Abs(plugin.Tracker.LastResult.Difference);
             chatMessage = chatMessage.Replace("{diff}", diff.ToString("F2"));
 
             var channel = plugin.Configuration?.OutputChannel ?? ChatChannel.Echo;

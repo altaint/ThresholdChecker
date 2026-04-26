@@ -4,6 +4,8 @@
   "Punchline": "Checks boss health against time thresholds.",
   "Description": "Simple tool to check boss health when sandbagging.",
   "ApplicableVersion": "any",
+  "RepoUrl": "https://github.com/altaint/ThresholdChecker",
+  "IconUrl":"https://raw.githubusercontent.com/altaint/ThresholdChecker/main/Media/placeholder.png",
   "Tags": [
     "plugin",
 	"dps"

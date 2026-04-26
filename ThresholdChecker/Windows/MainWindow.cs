@@ -25,8 +25,8 @@ namespace ThresholdChecker.Windows
 
         public override void PreDraw()
         {
-            WindowName = plugin.IsTracking 
-                ? $"Threshold Checker - {plugin.TrackedTargetName}###Threshold Checker" 
+            WindowName = plugin.Tracker.IsTracking 
+                ? $"Threshold Checker - {plugin.Tracker.TrackedTargetName}###Threshold Checker" 
                 : "Threshold Checker###Threshold Checker";
         }
 
@@ -39,7 +39,7 @@ namespace ThresholdChecker.Windows
             ImGui.Text("Status: ");
             ImGui.SameLine();
 
-            if (plugin.IsTracking)
+            if (plugin.Tracker.IsTracking)
             {
                 ImGui.TextColored(new Vector4(0.0f, 1.0f, 0.0f, 1.0f), "Tracking");
             }
@@ -59,58 +59,58 @@ namespace ThresholdChecker.Windows
             ImGui.Separator();
             ImGui.Spacing();
 
-            if (plugin.IsTracking)
+            if (plugin.Tracker.IsTracking)
             {
-                ImGui.Text($"Target: {plugin.TrackedTargetName}");
+                ImGui.Text($"Target: {plugin.Tracker.TrackedTargetName}");
 
                 ImGui.SameLine(ImGui.GetWindowWidth() - ImGui.CalcTextSize("Phase 2").X - 35f);
                 
                 ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(0, 0));
-                bool isP2 = plugin.IsPhase2;
+                bool isP2 = plugin.Tracker.IsPhase2;
                 if (ImGui.Checkbox("Phase 2", ref isP2))
                 {
-                    plugin.TogglePhase(isP2);
+                    plugin.Tracker.TogglePhase(isP2);
                 }
                 ImGui.PopStyleVar();
 
-                if (plugin.LastResult != null)
+                if (plugin.Tracker.LastResult != null)
                 {
                     ImGui.Spacing();
                     ImGui.TextColored(new Vector4(0.7f, 0.7f, 0.7f, 1.0f), "--- Previous Threshold ---");
-                    ImGui.Text($"Goal: {plugin.LastResult.Threshold.TimeMinutes}:{plugin.LastResult.Threshold.TimeSeconds:D2} at {plugin.LastResult.Threshold.TargetHpPercent}%");
-                    if (plugin.LastResult.Difference > plugin.CurrentTargetConfig?.TolerancePercent)
+                    ImGui.Text($"Goal: {plugin.Tracker  .LastResult.Threshold.TimeMinutes}:{plugin.Tracker.LastResult.Threshold.TimeSeconds:D2} at {plugin.Tracker.LastResult.Threshold.TargetHpPercent}%");
+                    if (plugin.Tracker.LastResult.Difference > plugin.Tracker.CurrentTargetConfig?.TolerancePercent)
                     {
-                        ImGui.TextColored(new Vector4(1.0f, 0.35f, 0.1f, 1.0f), $"Actual: {plugin.LastResult.ActualHpAtThreshold:F2}% (Behind by {plugin.LastResult.Difference:F2}%)");
+                        ImGui.TextColored(new Vector4(1.0f, 0.35f, 0.1f, 1.0f), $"Actual: {plugin.Tracker.LastResult.ActualHpAtThreshold:F2}% (Behind by {plugin.Tracker.LastResult.Difference:F2}%)");
                     }
-                    else if (plugin.LastResult.Difference < -plugin.CurrentTargetConfig?.TolerancePercent)
+                    else if (plugin.Tracker.LastResult.Difference < -plugin.Tracker.CurrentTargetConfig?.TolerancePercent)
                     {
-                        var aheadAmount = Math.Abs(plugin.LastResult.Difference);
-                        ImGui.TextColored(new Vector4(0.9f, 0.8f, 1.0f, 1.0f), $"Actual: {plugin.LastResult.ActualHpAtThreshold:F2}% (Fast by {aheadAmount:F2}%)");
+                        var aheadAmount = Math.Abs(plugin.Tracker.LastResult.Difference);
+                        ImGui.TextColored(new Vector4(0.9f, 0.8f, 1.0f, 1.0f), $"Actual: {plugin.Tracker.LastResult.ActualHpAtThreshold:F2}% (Fast by {aheadAmount:F2}%)");
                     }
                     else
                     {
-                        ImGui.TextColored(new Vector4(0.0f, 1.0f, 0.0f, 1.0f), $"Actual: {plugin.LastResult.ActualHpAtThreshold:F2}% (On Track within {plugin.CurrentTargetConfig?.TolerancePercent}%)");
+                        ImGui.TextColored(new Vector4(0.0f, 1.0f, 0.0f, 1.0f), $"Actual: {plugin.Tracker.LastResult.ActualHpAtThreshold:F2}% (On Track within {plugin.Tracker.CurrentTargetConfig?.TolerancePercent}%)");
                     }
                     ImGui.Spacing();
                 }
 
                 ImGui.Spacing();
 
-                var hpText = $"Health: {plugin.CurrentHpPercent:F2}%";
-                float hpFraction = (float)(plugin.CurrentHpPercent / 100.0);
+                var hpText = $"Health: {plugin.Tracker.CurrentHpPercent:F2}%";
+                float hpFraction = (float)(plugin.Tracker.CurrentHpPercent / 100.0);
 
                 Vector4 barColor;
-                if (plugin.NextThreshold == null)
+                if (plugin.Tracker.NextThreshold == null)
                 {
                     barColor = new Vector4(0.1f, 0.5f, 0.8f, 1.0f);
                 }
                 else
                 {
-                    if (plugin.CurrentPace == PacingState.Behind)
+                    if (plugin.Tracker.CurrentPace == PacingState.Behind)
                     {
                         barColor = behind; 
                     }
-                    else if (plugin.CurrentPace == PacingState.TooFast)
+                    else if (plugin.Tracker.CurrentPace == PacingState.TooFast)
                     {
                         barColor = tooFast;
                     }
@@ -126,7 +126,7 @@ namespace ThresholdChecker.Windows
 
                 ImGui.Spacing();
 
-                bool canPrint = plugin.LastResult != null;
+                bool canPrint = plugin.Tracker.LastResult != null;
                 if (!canPrint) ImGui.BeginDisabled();
                 
                 if (ImGui.Button("Print Status to Chat", new Vector2(0, 24)))
@@ -143,22 +143,22 @@ namespace ThresholdChecker.Windows
 
                 ImGui.Spacing();
 
-                if (plugin.NextThreshold != null)
+                if (plugin.Tracker.NextThreshold != null)
                 {
                     ImGui.Spacing();
                     ImGui.TextColored(new Vector4(1.0f, 1.0f, 1.0f, 1.0f), "--- Next Threshold ---");
-                    ImGui.Text($"Goal: {plugin.NextThreshold.TimeMinutes}:{plugin.NextThreshold.TimeSeconds:D2} at {plugin.NextThreshold.TargetHpPercent}%");
-                    if (plugin.CurrentPace == PacingState.Behind)
+                    ImGui.Text($"Goal: {plugin.Tracker.NextThreshold.TimeMinutes}:{plugin.Tracker.NextThreshold.TimeSeconds:D2} at {plugin.Tracker.NextThreshold.TargetHpPercent}%");
+                    if (plugin.Tracker.CurrentPace == PacingState.Behind)
                     {
-                        ImGui.TextColored(behind, $"[BEHIND]\nProjected Health: {plugin.ProjectedHpPercent:F2}%");
+                        ImGui.TextColored(behind, $"[BEHIND]\nProjected Health: {plugin.Tracker.ProjectedHpPercent:F2}%");
                     }
-                    else if (plugin.CurrentPace == PacingState.TooFast)
+                    else if (plugin.Tracker.CurrentPace == PacingState.TooFast)
                     {
-                        ImGui.TextColored(tooFast, $"[TOO FAST]\nProjected Health: {plugin.ProjectedHpPercent:F2}%");
+                        ImGui.TextColored(tooFast, $"[TOO FAST]\nProjected Health: {plugin.Tracker.ProjectedHpPercent:F2}%");
                     }
                     else
                     {
-                        ImGui.TextColored(onTrack, $"[ON TRACK]\nProjected Health: {plugin.ProjectedHpPercent:F2}%");
+                        ImGui.TextColored(onTrack, $"[ON TRACK]\nProjected Health: {plugin.Tracker.ProjectedHpPercent:F2}%");
                     }
                 }
 
@@ -170,23 +170,23 @@ namespace ThresholdChecker.Windows
             }
 
             ImGui.Spacing();
-            ImGui.Text($"Combat Time: {plugin.CombatDuration:mm\\:ss}");
+            ImGui.Text($"Combat Time: {plugin.Tracker.CombatDuration:mm\\:ss}");
 
             ImGui.Spacing();
             ImGui.Separator();
             ImGui.Spacing();
 
-            var buttonText = plugin.IsTracking ? "Stop Tracking" : "Start Tracking Target";
+            var buttonText = plugin.Tracker.IsTracking ? "Stop Tracking" : "Start Tracking Target";
             if (ImGui.Button(buttonText, new Vector2(-1, 30)))
             {
-                plugin.ToggleTracking();
+                plugin.Tracker.ToggleTracking();
             }
 
-            if (!string.IsNullOrEmpty(plugin.ErrorMessage))
+            if (!string.IsNullOrEmpty(plugin.Tracker.ErrorMessage))
             {
                 ImGui.Spacing();
                 ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(1.0f, 0.0f, 0.0f, 1.0f));
-                ImGui.TextWrapped(plugin.ErrorMessage);
+                ImGui.TextWrapped(plugin.Tracker.ErrorMessage);
                 ImGui.PopStyleColor();
             }
         }
