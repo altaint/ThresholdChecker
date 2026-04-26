@@ -351,7 +351,7 @@ public class TabEncounters : IDisposable
         ImGui.TextColored(new Vector4(0.75f, 0.75f, 0.75f, 1.0f), " / ");
 
         var canAddCurrentTarget = false;
-        Dalamud.Game.ClientState.Objects.Types.IBattleNpc activeBnpc = null;
+        Dalamud.Game.ClientState.Objects.Types.IBattleNpc activeBnpc = null!;
         if (npcSheet != null && Service.TargetManager != null && Service.ClientState != null && selectedDutyIndex >= 0)
         {
             var clientTerritory = Service.ClientState.TerritoryType;
@@ -379,8 +379,8 @@ public class TabEncounters : IDisposable
         if (addCurrentTargetPressed && canAddCurrentTarget && activeBnpc != null)
         {
             var bnpcNameId = activeBnpc.NameId;
-            var row = npcSheet.GetRow(bnpcNameId);
-            var addName = row.Singular.ToString();
+            var row = npcSheet?.GetRow(bnpcNameId);
+            var addName = row?.Singular.ToString() ?? "";
 
             if (!string.IsNullOrEmpty(addName) && char.IsLower(addName[0]))
                 addName = char.ToUpper(addName[0]) + addName.Substring(1);
@@ -483,18 +483,17 @@ public class TabEncounters : IDisposable
 
     public void OnOpen()
     {
-        var currentTerritoryId = Service.ClientState?.TerritoryType ?? 0;
-        if (currentTerritoryId == 0)
-        {
-            return;
-        }
+        selectedDutyIndex = -1;
+        selectedTargetIndex = -1;
 
-        var dutyIndex = configuration.Duties.FindIndex(d => d.TerritoryId == currentTerritoryId);
-
-        if (dutyIndex >= 0)
-        {
-            selectedDutyIndex = dutyIndex;
-            selectedTargetIndex = -1;
-        }
+        editingPhase = 0;
+        newSelectedDutyId = 0;
+        dutySearchFilter = "";
+        newSelectedTargetId = 0;
+        targetSearchFilter = "";
+        addDutyError = "";
+        addDutyErrorTime = null;
+        addTargetError = "";
+        addTargetErrorTime = null;
     }
 }
