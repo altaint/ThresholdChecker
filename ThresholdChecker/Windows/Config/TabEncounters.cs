@@ -10,8 +10,8 @@ namespace ThresholdChecker.Windows.Config;
 public class TabEncounters : IDisposable
 {
     private readonly Configuration configuration;
-    private int selectedDutyIndex = 0;
-    private int selectedTargetIndex = 0;
+    private int selectedDutyIndex = -1;
+    private int selectedTargetIndex = -1;
     private int editingPhase = 0; // 0 = P1, 1 = P2
 
     private uint newSelectedDutyId = 0;
@@ -39,27 +39,41 @@ public class TabEncounters : IDisposable
     {
         ImGui.Spacing();
 
-        if (selectedDutyIndex >= configuration.Duties.Count)
-        {
-            selectedDutyIndex = Math.Max(0, configuration.Duties.Count - 1);
-            selectedTargetIndex = 0;
-        }
-
         ImGui.Text("Select Duty:");
 
         if (configuration.Duties.Count > 0)
         {
-            var dutyNames = configuration.Duties.Select(d => d.DutyName).ToArray();
-            ImGui.Combo("##dutyCombo", ref selectedDutyIndex, dutyNames, dutyNames.Length);
+            var dutyNames = new string[configuration.Duties.Count + 1];
+            dutyNames[0] = "-- Select a Duty --";
+            for (int i = 0; i < configuration.Duties.Count; i++)
+                dutyNames[i + 1] = configuration.Duties[i].DutyName;
 
-            ImGui.SameLine();
-            if (ImGui.Button("Delete Duty"))
+            int displaySelectedDuty = selectedDutyIndex >= 0 ? selectedDutyIndex + 1 : 0;
+            ImGui.Combo("##dutyCombo", ref displaySelectedDuty, dutyNames, dutyNames.Length);
+
+            if (displaySelectedDuty == 0)
+                selectedDutyIndex = -1;
+            else
+                selectedDutyIndex = displaySelectedDuty - 1;
+
+            if (selectedDutyIndex >= 0)
             {
-                configuration.Duties.RemoveAt(selectedDutyIndex);
-                configuration.Save();
-                if (selectedDutyIndex >= configuration.Duties.Count)
-                    selectedDutyIndex = Math.Max(0, configuration.Duties.Count - 1);
-                selectedTargetIndex = 0;
+                ImGui.SameLine();
+                if (ImGui.Button("Delete Duty"))
+                {
+                    configuration.Duties.RemoveAt(selectedDutyIndex);
+                    configuration.Save();
+                    if (configuration.Duties.Count == 0)
+                    {
+                        selectedDutyIndex = -1;
+                        selectedTargetIndex = -1;
+                    }
+                    else
+                    {
+                        selectedDutyIndex = Math.Clamp(selectedDutyIndex, 0, configuration.Duties.Count - 1);
+                        selectedTargetIndex = -1;
+                    }
+                }
             }
         }
         else
@@ -145,7 +159,7 @@ public class TabEncounters : IDisposable
                 configuration.Duties.Add(newDuty);
 
                 selectedDutyIndex = configuration.Duties.Count - 1;
-                selectedTargetIndex = 0;
+                selectedTargetIndex = -1;
                 newSelectedDutyId = 0;
                 dutySearchFilter = "";
                 configuration.Save();
@@ -162,8 +176,9 @@ public class TabEncounters : IDisposable
         ImGui.Separator();
         ImGui.Spacing();
 
-        if (configuration.Duties.Count == 0)
+        if (selectedDutyIndex < 0)
         {
+            ImGui.TextColored(new Vector4(1.0f, 0.85f, 0.0f, 1.0f), "⚠ Select a duty to configure targets.");
             return;
         }
 
@@ -171,24 +186,42 @@ public class TabEncounters : IDisposable
 
         if (selectedTargetIndex >= currentDuty.Targets.Count)
         {
-            selectedTargetIndex = Math.Max(0, currentDuty.Targets.Count - 1);
+            selectedTargetIndex = Math.Max(-1, currentDuty.Targets.Count - 1);
         }
 
         ImGui.Text($"Select Target for {currentDuty.DutyName}:");
 
         if (currentDuty.Targets.Count > 0)
         {
-            var targetNames = currentDuty.Targets.Select(t => t.TargetName).ToArray();
+            var targetNames = new string[currentDuty.Targets.Count + 1];
+            targetNames[0] = "-- Select a Target --";
+            for (int i = 0; i < currentDuty.Targets.Count; i++)
+                targetNames[i + 1] = currentDuty.Targets[i].TargetName;
 
-            ImGui.Combo("##targetCombo", ref selectedTargetIndex, targetNames, targetNames.Length);
+            int displaySelectedTarget = selectedTargetIndex >= 0 ? selectedTargetIndex + 1 : 0;
+            ImGui.Combo("##targetCombo", ref displaySelectedTarget, targetNames, targetNames.Length);
 
-            ImGui.SameLine();
-            if (ImGui.Button("Delete Target"))
+            if (displaySelectedTarget == 0)
+                selectedTargetIndex = -1;
+            else
+                selectedTargetIndex = displaySelectedTarget - 1;
+
+            if (selectedTargetIndex >= 0)
             {
-                currentDuty.Targets.RemoveAt(selectedTargetIndex);
-                configuration.Save();
-                if (selectedTargetIndex >= currentDuty.Targets.Count)
-                    selectedTargetIndex = Math.Max(0, currentDuty.Targets.Count - 1);
+                ImGui.SameLine();
+                if (ImGui.Button("Delete Target"))
+                {
+                    currentDuty.Targets.RemoveAt(selectedTargetIndex);
+                    configuration.Save();
+                    if (currentDuty.Targets.Count == 0)
+                    {
+                        selectedTargetIndex = -1;
+                    }
+                    else
+                    {
+                        selectedTargetIndex = Math.Clamp(selectedTargetIndex, 0, currentDuty.Targets.Count - 1);
+                    }
+                }
             }
         }
         else
@@ -303,8 +336,9 @@ public class TabEncounters : IDisposable
         ImGui.Separator();
         ImGui.Spacing();
 
-        if (currentDuty.Targets.Count == 0)
+        if (selectedTargetIndex < 0)
         {
+            ImGui.TextColored(new Vector4(1.0f, 0.85f, 0.0f, 1.0f), "⚠ Select a target to configure thresholds.");
             return;
         }
 
@@ -382,7 +416,7 @@ public class TabEncounters : IDisposable
         if (dutyIndex >= 0)
         {
             selectedDutyIndex = dutyIndex;
-            selectedTargetIndex = 0;
+            selectedTargetIndex = -1;
         }
     }
 }
