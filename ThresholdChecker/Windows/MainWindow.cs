@@ -35,6 +35,7 @@ namespace ThresholdChecker.Windows
             Vector4 behind = new Vector4(1.0f, 0.35f, 0.1f, 1.0f);
             Vector4 tooFast = new Vector4(0.6f, 0.5f, 0.0f, 1.0f);
             Vector4 onTrack = new Vector4(0.1f, 0.7f, 0.2f, 1.0f);
+            Vector4 ahead = new Vector4(0.9f, 0.8f, 1.0f, 1.0f);
 
             ImGui.Text("Status: ");
             ImGui.SameLine();
@@ -77,7 +78,7 @@ namespace ThresholdChecker.Windows
                 {
                     ImGui.Spacing();
                     ImGui.TextColored(new Vector4(0.7f, 0.7f, 0.7f, 1.0f), "--- Previous Threshold ---");
-                    ImGui.Text($"Goal: {plugin.Tracker  .LastResult.Threshold.TimeMinutes}:{plugin.Tracker.LastResult.Threshold.TimeSeconds:D2} at {plugin.Tracker.LastResult.Threshold.TargetHpPercent}%");
+
                     if (plugin.Tracker.LastResult.Difference > plugin.Tracker.CurrentTargetConfig?.TolerancePercent)
                     {
                         ImGui.TextColored(new Vector4(1.0f, 0.35f, 0.1f, 1.0f), $"Actual: {plugin.Tracker.LastResult.ActualHpAtThreshold:F2}% (Behind by {plugin.Tracker.LastResult.Difference:F2}%)");
@@ -100,19 +101,21 @@ namespace ThresholdChecker.Windows
                 float hpFraction = (float)(plugin.Tracker.CurrentHpPercent / 100.0);
 
                 Vector4 barColor;
-                if (plugin.Tracker.NextThreshold == null)
+                if (plugin.Tracker.LastResult == null)
                 {
                     barColor = new Vector4(0.1f, 0.5f, 0.8f, 1.0f);
                 }
                 else
                 {
-                    if (plugin.Tracker.CurrentPace == PacingState.Behind)
+                    var tol = plugin.Tracker.CurrentTargetConfig?.TolerancePercent ?? 0.0;
+                    var diff = plugin.Tracker.LastResult.Difference;
+                    if (diff > tol)
                     {
-                        barColor = behind; 
+                        barColor = behind;
                     }
-                    else if (plugin.Tracker.CurrentPace == PacingState.TooFast)
+                    else if (diff < -tol)
                     {
-                        barColor = tooFast;
+                        barColor = ahead;
                     }
                     else
                     {
@@ -146,18 +149,45 @@ namespace ThresholdChecker.Windows
                 if (plugin.Tracker.NextThreshold != null)
                 {
                     ImGui.Spacing();
-                    ImGui.TextColored(new Vector4(1.0f, 1.0f, 1.0f, 1.0f), "--- Next Threshold ---");
-                    ImGui.Text($"Goal: {plugin.Tracker.NextThreshold.TimeMinutes}:{plugin.Tracker.NextThreshold.TimeSeconds:D2} at {plugin.Tracker.NextThreshold.TargetHpPercent}%");
+
+                    var next = plugin.Tracker.NextThreshold;
+                    var goalText = $"Next Threshold: {next.TimeMinutes}:{next.TimeSeconds:D2} at {next.TargetHpPercent}%";
+                    var goalSize = ImGui.CalcTextSize(goalText);
+                    var goalPadding = new Vector2(8f, 4f);
+                    var availW = ImGui.GetContentRegionAvail().X;
+                    if (availW <= 0f) availW = ImGui.GetWindowWidth() - ImGui.GetStyle().WindowPadding.X * 2f;
+                    var goalWidth = Math.Min(availW, goalSize.X + goalPadding.X * 2f);
+                    var goalHeight = goalSize.Y + goalPadding.Y * 2f;
+
+                    ImGui.PushStyleColor(ImGuiCol.ChildBg, new Vector4(0.08f, 0.45f, 0.78f, 1.0f));
+                    ImGui.PushStyleColor(ImGuiCol.Border, new Vector4(1.0f, 1.0f, 1.0f, 0.08f));
+                    ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(0, 0));
+                    ImGui.BeginChild("NextGoalInline", new Vector2(goalWidth, goalHeight), true, ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
+                    var curPos = ImGui.GetCursorPos();
+                    ImGui.SetCursorPos(new Vector2(curPos.X + goalPadding.X, curPos.Y + goalPadding.Y));
+                    ImGui.TextColored(new Vector4(1.0f, 1.0f, 1.0f, 1.0f), goalText);
+                    ImGui.EndChild();
+                    ImGui.PopStyleVar();
+                    ImGui.PopStyleColor(2);
+
+                    ImGui.Spacing();
+
                     if (plugin.Tracker.CurrentPace == PacingState.Behind)
                     {
+                        ImGui.TextColored(new Vector4(1.0f, 1.0f, 1.0f, 1.0f), "--- Prediction ---");
+
                         ImGui.TextColored(behind, $"[BEHIND]\nProjected Health: {plugin.Tracker.ProjectedHpPercent:F2}%");
                     }
                     else if (plugin.Tracker.CurrentPace == PacingState.TooFast)
                     {
+                        ImGui.TextColored(new Vector4(1.0f, 1.0f, 1.0f, 1.0f), "--- Prediction ---");
+
                         ImGui.TextColored(tooFast, $"[TOO FAST]\nProjected Health: {plugin.Tracker.ProjectedHpPercent:F2}%");
                     }
                     else
                     {
+                        ImGui.TextColored(new Vector4(1.0f, 1.0f, 1.0f, 1.0f), "--- Prediction ---");
+
                         ImGui.TextColored(onTrack, $"[ON TRACK]\nProjected Health: {plugin.Tracker.ProjectedHpPercent:F2}%");
                     }
                 }

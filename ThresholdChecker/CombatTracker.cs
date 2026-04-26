@@ -57,7 +57,6 @@ namespace ThresholdChecker
                 LastResult = null;
                 LastEvaluatedThreshold = null;
                 CurrentTargetConfig = null;
-                IsPhase2 = false;
                 return;
             }
 
@@ -89,7 +88,6 @@ namespace ThresholdChecker
             }
 
             isTracking = true;
-            IsPhase2 = false;
             LastResult = null;
             LastEvaluatedThreshold = null;
             ProjectedHpPercent = 100.0;
@@ -142,16 +140,40 @@ namespace ThresholdChecker
 
             var target = Service.TargetManager.Target;
 
-            if (target != null && target.GameObjectId == trackedObjectId)
+            if (target != null)
             {
-                if (target is Dalamud.Game.ClientState.Objects.Types.IBattleChara battleChara)
+                if (target.GameObjectId == trackedObjectId)
                 {
-                    var maxHp = battleChara.MaxHp;
-                    var currentHp = battleChara.CurrentHp;
-
-                    if (maxHp > 0)
+                    if (target is Dalamud.Game.ClientState.Objects.Types.IBattleChara battleChara)
                     {
-                        CurrentHpPercent = ((double)currentHp / maxHp) * 100.0;
+                        var maxHp = battleChara.MaxHp;
+                        var currentHp = battleChara.CurrentHp;
+
+                        if (maxHp > 0)
+                        {
+                            CurrentHpPercent = ((double)currentHp / maxHp) * 100.0;
+                        }
+                    }
+                }
+                else
+                {
+                    if (string.Equals(target.Name.ToString(), TrackedTargetName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        trackedObjectId = target.GameObjectId;
+                        if (target is Dalamud.Game.ClientState.Objects.Types.IBattleChara battleChara)
+                        {
+                            var maxHp = battleChara.MaxHp;
+                            var currentHp = battleChara.CurrentHp;
+
+                            if (maxHp > 0)
+                            {
+                                CurrentHpPercent = ((double)currentHp / maxHp) * 100.0;
+                            }
+                        }
+                    }
+                    else if (!inCombat)
+                    {
+                        CurrentHpPercent = 100.0;
                     }
                 }
             }
@@ -220,6 +242,7 @@ namespace ThresholdChecker
                 ErrorMessage = string.Empty;
                 ProjectedHpPercent = 100.0;
                 CurrentPace = PacingState.OnTrack;
+                IsPhase2 = false;
             }
         }
     }
