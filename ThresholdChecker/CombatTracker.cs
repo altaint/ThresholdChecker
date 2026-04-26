@@ -111,8 +111,6 @@ namespace ThresholdChecker
 
         public void OnFrameworkUpdate(IFramework framework)
         {
-            if (!isTracking) { return; }
-
             bool inCombat = Service.Condition[ConditionFlag.InCombat];
             if (inCombat)
             {
@@ -127,13 +125,20 @@ namespace ThresholdChecker
             {
                 combatStartTime = null;
                 CombatDuration = TimeSpan.Zero;
-                NextThreshold = null;
-                LastEvaluatedThreshold = null;
 
-                LastResult = null;
-                ProjectedHpPercent = 100.0;
-                CurrentPace = PacingState.OnTrack;
+                if (isTracking)
+                {
+                    NextThreshold = null;
+                    LastEvaluatedThreshold = null;
+
+                    LastResult = null;
+                    ProjectedHpPercent = 100.0;
+                    CurrentPace = PacingState.OnTrack;
+                    CurrentHpPercent = 100.0;
+                }
             }
+
+            if (!isTracking) { return; }
 
             var target = Service.TargetManager.Target;
 
