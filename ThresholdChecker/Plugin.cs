@@ -42,7 +42,8 @@ namespace ThresholdChecker
             Service.CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
             {
                 HelpMessage = "Opens the Threshold Checker UI.\n" +
-                $"{CommandName} print → Prints the current tracking status to chat.\n"
+                $"{CommandName} print → Prints the current tracking status to chat.\n" +
+                $"{CommandName} config → Opens the configuration window.\n"
             });
 
             Service.Framework.Update += Tracker.OnFrameworkUpdate;
@@ -70,9 +71,15 @@ namespace ThresholdChecker
 
         private void OnCommand(string command, string args)
         {
-            if (args.Trim().Equals("print", StringComparison.OrdinalIgnoreCase))
+            var trimmed = args.Trim();
+
+            if (trimmed.Equals("print", StringComparison.OrdinalIgnoreCase))
             {
                 ChatManager.PrintStatusToChat(true);
+            }
+            else if (trimmed.Equals("config", StringComparison.OrdinalIgnoreCase))
+            {
+                ToggleConfigUi();
             }
             else
             {
