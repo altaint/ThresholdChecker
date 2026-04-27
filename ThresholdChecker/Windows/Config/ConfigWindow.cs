@@ -10,6 +10,7 @@ public class ConfigWindow : Window, IDisposable
     private readonly Configuration configuration;
     private readonly TabEncounters encountersTab;
     private readonly TabChat chatTab;
+    private readonly TabColour colourTab;
 
     private DateTime? lastSaveTime = null;
     private readonly TimeSpan saveMessageDuration = TimeSpan.FromSeconds(2);
@@ -27,12 +28,14 @@ public class ConfigWindow : Window, IDisposable
 
         this.encountersTab = new TabEncounters(configuration);
         this.chatTab = new TabChat(configuration);
+        this.colourTab = new TabColour(configuration);
     }
 
     public void Dispose()
     {
         this.encountersTab.Dispose();
         this.chatTab.Dispose();
+        this.colourTab.Dispose();
     }
 
     public override void Draw()
@@ -48,6 +51,12 @@ public class ConfigWindow : Window, IDisposable
             if (ImGui.BeginTabItem("Chat Settings"))
             {
                 chatTab.Draw();
+                ImGui.EndTabItem();
+            }
+
+            if (ImGui.BeginTabItem("Colours"))
+            {
+                colourTab.Draw();
                 ImGui.EndTabItem();
             }
 

@@ -32,10 +32,6 @@ namespace ThresholdChecker.Windows
 
         public override void Draw()
         {
-            Vector4 behind = new Vector4(1.0f, 0.35f, 0.1f, 1.0f);
-            Vector4 tooFast = new Vector4(0.6f, 0.5f, 0.0f, 1.0f);
-            Vector4 onTrack = new Vector4(0.1f, 0.7f, 0.2f, 1.0f);
-
             ImGui.Text("Status: ");
             ImGui.SameLine();
 
@@ -78,6 +74,11 @@ namespace ThresholdChecker.Windows
                     ImGui.Spacing();
                     ImGui.TextColored(new Vector4(0.7f, 0.7f, 0.7f, 1.0f), "--- Previous Threshold ---");
 
+                    // Use configured colors
+                    Vector4 behind = plugin.Configuration.BehindColor.ToVector4();
+                    Vector4 tooFast = plugin.Configuration.TooFastColor.ToVector4();
+                    Vector4 onTrack = plugin.Configuration.OnTrackColor.ToVector4();
+
                     if (plugin.Tracker.LastResult.Difference > plugin.Tracker.CurrentTargetConfig?.TolerancePercent)
                     {
                         ImGui.TextColored(behind, $"Actual: {plugin.Tracker.LastResult.ActualHpAtThreshold:F2}% (Behind by {plugin.Tracker.LastResult.Difference:F2}%)");
@@ -108,6 +109,11 @@ namespace ThresholdChecker.Windows
                 {
                     var tol = plugin.Tracker.CurrentTargetConfig?.TolerancePercent ?? 0.0;
                     var diff = plugin.Tracker.LastResult.Difference;
+                    // Read configured colors
+                    var behind = plugin.Configuration.BehindColor.ToVector4();
+                    var tooFast = plugin.Configuration.TooFastColor.ToVector4();
+                    var onTrack = plugin.Configuration.OnTrackColor.ToVector4();
+
                     if (diff > tol)
                     {
                         barColor = behind;
@@ -175,19 +181,19 @@ namespace ThresholdChecker.Windows
                     {
                         ImGui.TextColored(new Vector4(1.0f, 1.0f, 1.0f, 1.0f), "--- Prediction ---");
 
-                        ImGui.TextColored(behind, $"[BEHIND]\nProjected Health: {plugin.Tracker.ProjectedHpPercent:F2}%");
+                        ImGui.TextColored(plugin.Configuration.BehindColor.ToVector4(), $"[BEHIND]\\nProjected Health: {plugin.Tracker.ProjectedHpPercent:F2}%");
                     }
                     else if (plugin.Tracker.CurrentPace == PacingState.TooFast)
                     {
                         ImGui.TextColored(new Vector4(1.0f, 1.0f, 1.0f, 1.0f), "--- Prediction ---");
 
-                        ImGui.TextColored(tooFast, $"[TOO FAST]\nProjected Health: {plugin.Tracker.ProjectedHpPercent:F2}%");
+                        ImGui.TextColored(plugin.Configuration.TooFastColor.ToVector4(), $"[TOO FAST]\\nProjected Health: {plugin.Tracker.ProjectedHpPercent:F2}%");
                     }
                     else
                     {
                         ImGui.TextColored(new Vector4(1.0f, 1.0f, 1.0f, 1.0f), "--- Prediction ---");
 
-                        ImGui.TextColored(onTrack, $"[ON TRACK]\nProjected Health: {plugin.Tracker.ProjectedHpPercent:F2}%");
+                        ImGui.TextColored(plugin.Configuration.OnTrackColor.ToVector4(), $"[ON TRACK]\\nProjected Health: {plugin.Tracker.ProjectedHpPercent:F2}%");
                     }
                 }
 
