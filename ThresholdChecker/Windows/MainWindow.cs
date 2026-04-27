@@ -181,19 +181,19 @@ namespace ThresholdChecker.Windows
                     {
                         ImGui.TextColored(new Vector4(1.0f, 1.0f, 1.0f, 1.0f), "--- Prediction ---");
 
-                        ImGui.TextColored(plugin.Configuration.BehindColor.ToVector4(), $"[BEHIND]\\nProjected Health: {plugin.Tracker.ProjectedHpPercent:F2}%");
+                        ImGui.TextColored(plugin.Configuration.BehindColor.ToVector4(), $"[BEHIND]\nProjected Health: {plugin.Tracker.ProjectedHpPercent:F2}%");
                     }
                     else if (plugin.Tracker.CurrentPace == PacingState.TooFast)
                     {
                         ImGui.TextColored(new Vector4(1.0f, 1.0f, 1.0f, 1.0f), "--- Prediction ---");
 
-                        ImGui.TextColored(plugin.Configuration.TooFastColor.ToVector4(), $"[TOO FAST]\\nProjected Health: {plugin.Tracker.ProjectedHpPercent:F2}%");
+                        ImGui.TextColored(plugin.Configuration.TooFastColor.ToVector4(), $"[TOO FAST]\nProjected Health: {plugin.Tracker.ProjectedHpPercent:F2}%");
                     }
                     else
                     {
                         ImGui.TextColored(new Vector4(1.0f, 1.0f, 1.0f, 1.0f), "--- Prediction ---");
 
-                        ImGui.TextColored(plugin.Configuration.OnTrackColor.ToVector4(), $"[ON TRACK]\\nProjected Health: {plugin.Tracker.ProjectedHpPercent:F2}%");
+                        ImGui.TextColored(plugin.Configuration.OnTrackColor.ToVector4(), $"[ON TRACK]\nProjected Health: {plugin.Tracker.ProjectedHpPercent:F2}%");
                     }
                 }
 
