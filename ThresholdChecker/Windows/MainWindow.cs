@@ -35,7 +35,6 @@ namespace ThresholdChecker.Windows
             Vector4 behind = new Vector4(1.0f, 0.35f, 0.1f, 1.0f);
             Vector4 tooFast = new Vector4(0.6f, 0.5f, 0.0f, 1.0f);
             Vector4 onTrack = new Vector4(0.1f, 0.7f, 0.2f, 1.0f);
-            Vector4 ahead = new Vector4(0.9f, 0.8f, 1.0f, 1.0f);
 
             ImGui.Text("Status: ");
             ImGui.SameLine();
@@ -81,16 +80,16 @@ namespace ThresholdChecker.Windows
 
                     if (plugin.Tracker.LastResult.Difference > plugin.Tracker.CurrentTargetConfig?.TolerancePercent)
                     {
-                        ImGui.TextColored(new Vector4(1.0f, 0.35f, 0.1f, 1.0f), $"Actual: {plugin.Tracker.LastResult.ActualHpAtThreshold:F2}% (Behind by {plugin.Tracker.LastResult.Difference:F2}%)");
+                        ImGui.TextColored(behind, $"Actual: {plugin.Tracker.LastResult.ActualHpAtThreshold:F2}% (Behind by {plugin.Tracker.LastResult.Difference:F2}%)");
                     }
                     else if (plugin.Tracker.LastResult.Difference < -plugin.Tracker.CurrentTargetConfig?.TolerancePercent)
                     {
                         var aheadAmount = Math.Abs(plugin.Tracker.LastResult.Difference);
-                        ImGui.TextColored(new Vector4(0.9f, 0.8f, 1.0f, 1.0f), $"Actual: {plugin.Tracker.LastResult.ActualHpAtThreshold:F2}% (Fast by {aheadAmount:F2}%)");
+                        ImGui.TextColored(tooFast, $"Actual: {plugin.Tracker.LastResult.ActualHpAtThreshold:F2}% (Fast by {aheadAmount:F2}%)");
                     }
                     else
                     {
-                        ImGui.TextColored(new Vector4(0.0f, 1.0f, 0.0f, 1.0f), $"Actual: {plugin.Tracker.LastResult.ActualHpAtThreshold:F2}% (On Track within {plugin.Tracker.CurrentTargetConfig?.TolerancePercent}%)");
+                        ImGui.TextColored(onTrack, $"Actual: {plugin.Tracker.LastResult.ActualHpAtThreshold:F2}% (On Track within {plugin.Tracker.CurrentTargetConfig?.TolerancePercent}%)");
                     }
                     ImGui.Spacing();
                 }
@@ -115,7 +114,7 @@ namespace ThresholdChecker.Windows
                     }
                     else if (diff < -tol)
                     {
-                        barColor = ahead;
+                        barColor = tooFast;
                     }
                     else
                     {
