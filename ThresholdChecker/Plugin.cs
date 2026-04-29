@@ -47,7 +47,7 @@ namespace ThresholdChecker
             });
 
             Service.Framework.Update += Tracker.OnFrameworkUpdate;
-            Service.ClientState.TerritoryChanged += (id) => Tracker.OnTerritoryChanged((ushort)id);
+            Service.ClientState.TerritoryChanged += Tracker.OnTerritoryChanged;
         }
 
         public void Dispose()
@@ -61,7 +61,7 @@ namespace ThresholdChecker
             ConfigWindow.Dispose();
 
             Service.Framework.Update -= Tracker.OnFrameworkUpdate;
-            Service.ClientState.TerritoryChanged -= (id) => Tracker.OnTerritoryChanged((ushort)id);
+            Service.ClientState.TerritoryChanged -= Tracker.OnTerritoryChanged;
             Service.CommandManager.RemoveHandler(CommandName);
         }
 

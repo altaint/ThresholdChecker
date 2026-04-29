@@ -228,7 +228,7 @@ namespace ThresholdChecker
             }
         }
 
-        public void OnTerritoryChanged(ushort territoryId)
+        public void OnTerritoryChanged(uint territoryId)
         {
             if (isTracking)
             {
