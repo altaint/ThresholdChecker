@@ -33,12 +33,19 @@ namespace ThresholdChecker
     }
 
     [Serializable]
+    public class Configurations
+    {
+        public string ConfigurationName { get; set; } = "Configuration";
+        public List<ThresholdPhase> Phase1Thresholds { get; set; } = new();
+        public List<ThresholdPhase> Phase2Thresholds { get; set; } = new();
+    }
+
+    [Serializable]
     public class TargetConfig
     {
         public string TargetName { get; set; } = "Unknown";
         public double TolerancePercent { get; set; } = 3.0;
-        public List<ThresholdPhase> Thresholds { get; set; } = new();
-        public List<ThresholdPhase> P2Thresholds { get; set; } = new();
+        public List<Configurations> Configurations { get; set; } = new();
     }
 
     [Serializable]

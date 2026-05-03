@@ -23,6 +23,7 @@ namespace ThresholdChecker
         public TimeSpan CombatDuration { get; private set; } = TimeSpan.Zero;
 
         public TargetConfig? CurrentTargetConfig { get; private set; }
+        public Configurations? CurrentKillTimeConfig { get; private set; }
 
         public bool IsPhase2 { get; private set; } = false;
 
@@ -57,6 +58,7 @@ namespace ThresholdChecker
                 LastResult = null;
                 LastEvaluatedThreshold = null;
                 CurrentTargetConfig = null;
+                CurrentKillTimeConfig = null;
                 return;
             }
 
@@ -84,6 +86,13 @@ namespace ThresholdChecker
             if (CurrentTargetConfig == null)
             {
                 ErrorMessage = $"The target '{TrackedTargetName}' is not configured for this duty!";
+                return;
+            }
+
+            CurrentKillTimeConfig = CurrentTargetConfig.Configurations.FirstOrDefault();
+            if (CurrentKillTimeConfig == null)
+            {
+                ErrorMessage = $"No configurations found for '{TrackedTargetName}'!";
                 return;
             }
 
@@ -182,9 +191,11 @@ namespace ThresholdChecker
                 CurrentHpPercent = 100.0;
             }
 
-            if (isTracking && inCombat && CombatDuration.TotalSeconds > 3 && CurrentTargetConfig != null)
+            if (isTracking && inCombat && CombatDuration.TotalSeconds > 3 && CurrentKillTimeConfig != null)
             {
-                var activeThresholds = IsPhase2 ? CurrentTargetConfig.P2Thresholds : CurrentTargetConfig.Thresholds;
+                var activeThresholds = IsPhase2 
+                    ? CurrentKillTimeConfig.Phase2Thresholds 
+                    : CurrentKillTimeConfig.Phase1Thresholds;
                 var thresholds = activeThresholds.OrderBy(t => t.TotalSeconds).ToList();
                 var currentNext = thresholds.FirstOrDefault(t => t.TotalSeconds > CombatDuration.TotalSeconds);
 
@@ -212,11 +223,11 @@ namespace ThresholdChecker
 
                     ProjectedHpPercent = 100.0 - (dropRatePerSec * NextThreshold.TotalSeconds);
 
-                    if (ProjectedHpPercent > NextThreshold.TargetHpPercent + CurrentTargetConfig.TolerancePercent)
+                    if (ProjectedHpPercent > NextThreshold.TargetHpPercent + CurrentTargetConfig!.TolerancePercent)
                     {
                         CurrentPace = PacingState.Behind;
                     }
-                    else if (ProjectedHpPercent < NextThreshold.TargetHpPercent - CurrentTargetConfig.TolerancePercent)
+                    else if (ProjectedHpPercent < NextThreshold.TargetHpPercent - CurrentTargetConfig!.TolerancePercent)
                     {
                         CurrentPace = PacingState.TooFast;
                     }
@@ -239,6 +250,7 @@ namespace ThresholdChecker
                 LastResult = null;
                 LastEvaluatedThreshold = null;
                 CurrentTargetConfig = null;
+                CurrentKillTimeConfig = null;
                 ErrorMessage = string.Empty;
                 ProjectedHpPercent = 100.0;
                 CurrentPace = PacingState.OnTrack;

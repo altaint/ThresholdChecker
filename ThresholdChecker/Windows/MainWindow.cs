@@ -57,9 +57,20 @@ namespace ThresholdChecker.Windows
 
             if (plugin.Tracker.IsTracking)
             {
-                ImGui.Text($"Target: {plugin.Tracker.TrackedTargetName}");
+                ImGui.Text("Configuration: ");
+                ImGui.SameLine();
+                
+                if (plugin.Tracker.CurrentKillTimeConfig != null)
+                {
+                    ImGui.TextColored(new Vector4(0.7f, 0.9f, 1.0f, 1.0f), $"[{plugin.Tracker.CurrentKillTimeConfig.ConfigurationName}]");
+                }
+                else
+                {
+                    ImGui.TextColored(new Vector4(1.0f, 0.0f, 0.0f, 1.0f), "None");
+                }
 
-                ImGui.SameLine(ImGui.GetWindowWidth() - ImGui.CalcTextSize("Phase 2").X - 35f);
+                var phase2CheckSize = ImGui.CalcTextSize("Phase 2").X + ImGui.GetStyle().FramePadding.X * 4 + 20f;
+                ImGui.SameLine(ImGui.GetWindowWidth() - phase2CheckSize);
                 
                 ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(0, 0));
                 bool isP2 = plugin.Tracker.IsPhase2;
@@ -74,7 +85,6 @@ namespace ThresholdChecker.Windows
                     ImGui.Spacing();
                     ImGui.TextColored(new Vector4(0.7f, 0.7f, 0.7f, 1.0f), "--- Previous Threshold ---");
 
-                    // Use configured colors
                     Vector4 behind = plugin.Configuration.BehindColor.ToVector4();
                     Vector4 tooFast = plugin.Configuration.TooFastColor.ToVector4();
                     Vector4 onTrack = plugin.Configuration.OnTrackColor.ToVector4();
@@ -109,7 +119,6 @@ namespace ThresholdChecker.Windows
                 {
                     var tol = plugin.Tracker.CurrentTargetConfig?.TolerancePercent ?? 0.0;
                     var diff = plugin.Tracker.LastResult.Difference;
-                    // Read configured colors
                     var behind = plugin.Configuration.BehindColor.ToVector4();
                     var tooFast = plugin.Configuration.TooFastColor.ToVector4();
                     var onTrack = plugin.Configuration.OnTrackColor.ToVector4();
@@ -198,16 +207,18 @@ namespace ThresholdChecker.Windows
                 }
 
                 ImGui.Spacing();
+                ImGui.Text($"Combat Time: {plugin.Tracker.CombatDuration:mm\\:ss}");
             }
             else
             {
-                ImGui.Text("Target: None");
+                ImGui.TextColored(new Vector4(1.0f, 0.85f, 0.0f, 1.0f), "⚠ Not currently tracking a boss.");
+                ImGui.Spacing();
+                ImGui.TextColored(new Vector4(0.7f, 0.7f, 0.7f, 1.0f), "How to use:");
+                ImGui.BulletText("Click the Config button and create a threshold configuration.");
+                ImGui.BulletText("Target the boss that you want tracked and click the button below.");
+                ImGui.BulletText("Enter combat and the tracker will monitor pace.");
             }
 
-            ImGui.Spacing();
-            ImGui.Text($"Combat Time: {plugin.Tracker.CombatDuration:mm\\:ss}");
-
-            ImGui.Spacing();
             ImGui.Separator();
             ImGui.Spacing();
 

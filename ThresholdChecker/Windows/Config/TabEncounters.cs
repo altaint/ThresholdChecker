@@ -12,7 +12,8 @@ public class TabEncounters : IDisposable
     private readonly Configuration configuration;
     private int selectedDutyIndex = -1;
     private int selectedTargetIndex = -1;
-    private int editingPhase = 0; // 0 = P1, 1 = P2
+    private int selectedConfigIndex = -1;
+    private int editingPhase = 0; // 0 = Phase 1, 1 = Phase 2
 
     private uint newSelectedDutyId = 0;
     private string dutySearchFilter = "";
@@ -20,11 +21,16 @@ public class TabEncounters : IDisposable
     private uint newSelectedTargetId = 0;
     private string targetSearchFilter = "";
 
+    private string newConfigName = "";
+
     private string addDutyError = "";
     private DateTime? addDutyErrorTime = null;
 
     private string addTargetError = "";
     private DateTime? addTargetErrorTime = null;
+
+    private string addConfigError = "";
+    private DateTime? addConfigErrorTime = null;
 
     private readonly TimeSpan saveMessageDuration = TimeSpan.FromSeconds(2);
 
@@ -52,9 +58,21 @@ public class TabEncounters : IDisposable
             ImGui.Combo("##dutyCombo", ref displaySelectedDuty, dutyNames, dutyNames.Length);
 
             if (displaySelectedDuty == 0)
+            {
                 selectedDutyIndex = -1;
+                selectedTargetIndex = -1;
+                selectedConfigIndex = -1;
+            }
             else
-                selectedDutyIndex = displaySelectedDuty - 1;
+            {
+                int newDutyIndex = displaySelectedDuty - 1;
+                if (newDutyIndex != selectedDutyIndex)
+                {
+                    selectedDutyIndex = newDutyIndex;
+                    selectedTargetIndex = -1;
+                    selectedConfigIndex = -1;
+                }
+            }
 
             if (selectedDutyIndex >= 0)
             {
@@ -67,11 +85,13 @@ public class TabEncounters : IDisposable
                     {
                         selectedDutyIndex = -1;
                         selectedTargetIndex = -1;
+                        selectedConfigIndex = -1;
                     }
                     else
                     {
                         selectedDutyIndex = Math.Clamp(selectedDutyIndex, 0, configuration.Duties.Count - 1);
                         selectedTargetIndex = -1;
+                        selectedConfigIndex = -1;
                     }
                 }
             }
@@ -142,6 +162,7 @@ public class TabEncounters : IDisposable
 
                 selectedDutyIndex = configuration.Duties.Count - 1;
                 selectedTargetIndex = -1;
+                selectedConfigIndex = -1;
                 newSelectedDutyId = 0;
                 dutySearchFilter = "";
                 configuration.Save();
@@ -199,6 +220,7 @@ public class TabEncounters : IDisposable
 
                 selectedDutyIndex = configuration.Duties.Count - 1;
                 selectedTargetIndex = -1;
+                selectedConfigIndex = -1;
                 newSelectedDutyId = 0;
                 dutySearchFilter = "";
                 configuration.Save();
@@ -226,6 +248,7 @@ public class TabEncounters : IDisposable
         if (selectedTargetIndex >= currentDuty.Targets.Count)
         {
             selectedTargetIndex = Math.Max(-1, currentDuty.Targets.Count - 1);
+            selectedConfigIndex = -1;
         }
 
         ImGui.Text($"Select Target for {currentDuty.DutyName}:");
@@ -241,9 +264,19 @@ public class TabEncounters : IDisposable
             ImGui.Combo("##targetCombo", ref displaySelectedTarget, targetNames, targetNames.Length);
 
             if (displaySelectedTarget == 0)
+            {
                 selectedTargetIndex = -1;
+                selectedConfigIndex = -1;
+            }
             else
-                selectedTargetIndex = displaySelectedTarget - 1;
+            {
+                int newTargetIndex = displaySelectedTarget - 1;
+                if (newTargetIndex != selectedTargetIndex)
+                {
+                    selectedTargetIndex = newTargetIndex;
+                    selectedConfigIndex = -1;
+                }
+            }
 
             if (selectedTargetIndex >= 0)
             {
@@ -255,10 +288,12 @@ public class TabEncounters : IDisposable
                     if (currentDuty.Targets.Count == 0)
                     {
                         selectedTargetIndex = -1;
+                        selectedConfigIndex = -1;
                     }
                     else
                     {
                         selectedTargetIndex = Math.Clamp(selectedTargetIndex, 0, currentDuty.Targets.Count - 1);
+                        selectedConfigIndex = -1;
                     }
                 }
             }
@@ -340,6 +375,7 @@ public class TabEncounters : IDisposable
                 currentDuty.Targets.Add(new TargetConfig { TargetName = addName });
 
                 selectedTargetIndex = currentDuty.Targets.Count - 1;
+                selectedConfigIndex = -1;
                 newSelectedTargetId = 0;
                 targetSearchFilter = "";
                 configuration.Save();
@@ -395,6 +431,7 @@ public class TabEncounters : IDisposable
                 currentDuty.Targets.Add(new TargetConfig { TargetName = addName });
 
                 selectedTargetIndex = currentDuty.Targets.Count - 1;
+                selectedConfigIndex = -1;
                 newSelectedTargetId = 0;
                 targetSearchFilter = "";
                 configuration.Save();
@@ -402,7 +439,6 @@ public class TabEncounters : IDisposable
         }
 
         ImGui.SameLine();
-
 
         if (addTargetErrorTime.HasValue && DateTime.Now - addTargetErrorTime.Value < saveMessageDuration)
         {
@@ -420,16 +456,117 @@ public class TabEncounters : IDisposable
             return;
         }
 
-        var currentConfig = currentDuty.Targets[selectedTargetIndex];
+        var currentTargetConfig = currentDuty.Targets[selectedTargetIndex];
 
-        ImGui.Text($"Configure Health Thresholds for {currentConfig.TargetName}:");
+        if (selectedConfigIndex >= currentTargetConfig.Configurations.Count)
+        {
+            selectedConfigIndex = Math.Max(-1, currentTargetConfig.Configurations.Count - 1);
+        }
+
+        ImGui.Text($"Kill Time Configurations for {currentTargetConfig.TargetName}:");
+
+        if (currentTargetConfig.Configurations.Count > 0)
+        {
+            var configNames = new string[currentTargetConfig.Configurations.Count + 1];
+            configNames[0] = "-- Select a Configuration --";
+            for (int i = 0; i < currentTargetConfig.Configurations.Count; i++)
+                configNames[i + 1] = currentTargetConfig.Configurations[i].ConfigurationName;
+
+            int displaySelectedConfig = selectedConfigIndex >= 0 ? selectedConfigIndex + 1 : 0;
+            ImGui.Combo("##configCombo", ref displaySelectedConfig, configNames, configNames.Length);
+
+            if (displaySelectedConfig == 0)
+            {
+                selectedConfigIndex = -1;
+            }
+            else
+            {
+                selectedConfigIndex = displaySelectedConfig - 1;
+            }
+
+            if (selectedConfigIndex >= 0 && selectedConfigIndex < currentTargetConfig.Configurations.Count)
+            {
+                ImGui.SameLine();
+                if (ImGui.Button("Delete Configuration"))
+                {
+                    currentTargetConfig.Configurations.RemoveAt(selectedConfigIndex);
+                    configuration.Save();
+                    selectedConfigIndex = Math.Max(-1, currentTargetConfig.Configurations.Count - 1);
+                }
+
+                ImGui.SameLine();
+                if (ImGui.Button("Rename"))
+                {
+                    newConfigName = currentTargetConfig.Configurations[selectedConfigIndex].ConfigurationName;
+                    ImGui.OpenPopup("RenameConfigPopup");
+                }
+            }
+        }
+        else
+        {
+            ImGui.TextColored(new Vector4(0.5f, 0.5f, 0.5f, 1.0f), "No Configurations created.");
+        }
+
+        ImGui.Spacing();
+
+        ImGui.SetNextItemWidth(200f);
+        ImGui.InputTextWithHint("##newConfigName", "Configuration name", ref newConfigName, 64);
+
+        ImGui.SameLine();
+        if (ImGui.Button("Add Configuration"))
+        {
+            if (string.IsNullOrWhiteSpace(newConfigName))
+            {
+                addConfigError = "Configuration name cannot be empty!";
+                addConfigErrorTime = DateTime.Now;
+            }
+            else if (currentTargetConfig.Configurations.Any(c => c.ConfigurationName.Equals(newConfigName, StringComparison.OrdinalIgnoreCase)))
+            {
+                addConfigError = "Configuration with this name already exists!";
+                addConfigErrorTime = DateTime.Now;
+            }
+            else
+            {
+                var newConfig = new Configurations
+                {
+                    ConfigurationName = newConfigName,
+                    Phase1Thresholds = new(),
+                    Phase2Thresholds = new()
+                };
+                currentTargetConfig.Configurations.Add(newConfig);
+                selectedConfigIndex = currentTargetConfig.Configurations.Count - 1;
+                newConfigName = "";
+                configuration.Save();
+            }
+        }
+
+        ImGui.SameLine();
+        if (addConfigErrorTime.HasValue && DateTime.Now - addConfigErrorTime.Value < saveMessageDuration)
+        {
+            ImGui.SameLine();
+            ImGui.TextColored(new Vector4(1.0f, 0.0f, 0.0f, 1.0f), addConfigError);
+        }
+
+        ImGui.Spacing();
+        ImGui.Separator();
+        ImGui.Spacing();
+
+        if (selectedConfigIndex < 0 || selectedConfigIndex >= currentTargetConfig.Configurations.Count)
+        {
+            ImGui.TextColored(new Vector4(1.0f, 0.85f, 0.0f, 1.0f), "⚠ Select or create a configuration to edit thresholds.");
+            return;
+        }
+
+        var currentConfig = currentTargetConfig.Configurations[selectedConfigIndex];
+
+        ImGui.Text($"Configure Thresholds for '{currentConfig.ConfigurationName}':");
 
         ImGui.RadioButton("Phase 1", ref editingPhase, 0);
         ImGui.SameLine();
         ImGui.RadioButton("Phase 2", ref editingPhase, 1);
         ImGui.Spacing();
 
-        var activeThresholds = editingPhase == 0 ? currentConfig.Thresholds : currentConfig.P2Thresholds;
+        var activeThresholds = editingPhase == 0 ? currentConfig.Phase1Thresholds : currentConfig.Phase2Thresholds;
 
         for (int i = 0; i < activeThresholds.Count; i++)
         {
@@ -473,11 +610,38 @@ public class TabEncounters : IDisposable
         ImGui.Spacing();
         ImGui.Separator();
 
-        double tol = currentConfig.TolerancePercent;
+        double tol = currentTargetConfig.TolerancePercent;
         ImGui.SetNextItemWidth(100);
         if (ImGui.InputDouble("Tolerance % (+/-)", ref tol, 0, 0, "%.2f"))
         {
-            currentConfig.TolerancePercent = Math.Max(0, tol);
+            currentTargetConfig.TolerancePercent = Math.Max(0, tol);
+            configuration.Save();
+        }
+
+        if (ImGui.BeginPopupModal("RenameConfigPopup", ImGuiWindowFlags.AlwaysAutoResize))
+        {
+            ImGui.Text("Enter new configuration name:");
+            ImGui.InputText("##renameInput", ref newConfigName, 64);
+
+            ImGui.Spacing();
+
+            if (ImGui.Button("Rename", new Vector2(120, 0)))
+            {
+                if (!string.IsNullOrWhiteSpace(newConfigName) && selectedConfigIndex >= 0 && selectedConfigIndex < currentTargetConfig.Configurations.Count)
+                {
+                    currentTargetConfig.Configurations[selectedConfigIndex].ConfigurationName = newConfigName;
+                    configuration.Save();
+                    ImGui.CloseCurrentPopup();
+                }
+            }
+
+            ImGui.SameLine();
+            if (ImGui.Button("Cancel", new Vector2(120, 0)))
+            {
+                ImGui.CloseCurrentPopup();
+            }
+
+            ImGui.EndPopup();
         }
     }
 
@@ -485,15 +649,19 @@ public class TabEncounters : IDisposable
     {
         selectedDutyIndex = -1;
         selectedTargetIndex = -1;
+        selectedConfigIndex = -1;
 
         editingPhase = 0;
         newSelectedDutyId = 0;
         dutySearchFilter = "";
         newSelectedTargetId = 0;
         targetSearchFilter = "";
+        newConfigName = "";
         addDutyError = "";
         addDutyErrorTime = null;
         addTargetError = "";
         addTargetErrorTime = null;
+        addConfigError = "";
+        addConfigErrorTime = null;
     }
 }
