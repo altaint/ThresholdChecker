@@ -16,7 +16,7 @@ namespace ThresholdChecker.Windows
 
             SizeConstraints = new WindowSizeConstraints
             {
-                MinimumSize = new Vector2(300, 320),
+                MinimumSize = new Vector2(250, 375),
                 MaximumSize = new Vector2(float.MaxValue, float.MaxValue)
             };
         }
@@ -45,7 +45,7 @@ namespace ThresholdChecker.Windows
             }
 
             var buttonWidth = ImGui.CalcTextSize("Config").X + ImGui.GetStyle().FramePadding.X * 2;
-            ImGui.SameLine(ImGui.GetWindowWidth() - buttonWidth - 10f);
+            ImGui.SameLine(ImGui.GetContentRegionAvail().X - buttonWidth);
             if (ImGui.Button("Config", new Vector2(buttonWidth, 24)))
             {
                 plugin.ToggleConfigUi();
@@ -69,8 +69,8 @@ namespace ThresholdChecker.Windows
                     ImGui.TextColored(new Vector4(1.0f, 0.0f, 0.0f, 1.0f), "None");
                 }
 
-                var phase2CheckSize = ImGui.CalcTextSize("Phase 2").X + ImGui.GetStyle().FramePadding.X * 4 + 20f;
-                ImGui.SameLine(ImGui.GetWindowWidth() - phase2CheckSize);
+                var phase2CheckSize = ImGui.CalcTextSize("Phase 2").X + ImGui.GetStyle().FramePadding.X * 2;
+                ImGui.SameLine(ImGui.GetWindowWidth() - phase2CheckSize - 16f);
                 
                 ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(0, 0));
                 bool isP2 = plugin.Tracker.IsPhase2;
@@ -168,9 +168,7 @@ namespace ThresholdChecker.Windows
                     var goalText = $"Next Threshold: {next.TimeMinutes}:{next.TimeSeconds:D2} at {next.TargetHpPercent}%";
                     var goalSize = ImGui.CalcTextSize(goalText);
                     var goalPadding = new Vector2(8f, 4f);
-                    var availW = ImGui.GetContentRegionAvail().X;
-                    if (availW <= 0f) availW = ImGui.GetWindowWidth() - ImGui.GetStyle().WindowPadding.X * 2f;
-                    var goalWidth = Math.Min(availW, goalSize.X + goalPadding.X * 2f);
+                    var goalWidth = goalSize.X + goalPadding.X * 2f;
                     var goalHeight = goalSize.Y + goalPadding.Y * 2f;
 
                     ImGui.PushStyleColor(ImGuiCol.ChildBg, new Vector4(0.08f, 0.45f, 0.78f, 1.0f));
@@ -186,22 +184,18 @@ namespace ThresholdChecker.Windows
 
                     ImGui.Spacing();
 
+                    ImGui.TextColored(new Vector4(1.0f, 1.0f, 1.0f, 1.0f), "--- Prediction ---");
+
                     if (plugin.Tracker.CurrentPace == PacingState.Behind)
                     {
-                        ImGui.TextColored(new Vector4(1.0f, 1.0f, 1.0f, 1.0f), "--- Prediction ---");
-
                         ImGui.TextColored(plugin.Configuration.BehindColor.ToVector4(), $"[BEHIND]\nProjected Health: {plugin.Tracker.ProjectedHpPercent:F2}%");
                     }
                     else if (plugin.Tracker.CurrentPace == PacingState.TooFast)
                     {
-                        ImGui.TextColored(new Vector4(1.0f, 1.0f, 1.0f, 1.0f), "--- Prediction ---");
-
                         ImGui.TextColored(plugin.Configuration.TooFastColor.ToVector4(), $"[TOO FAST]\nProjected Health: {plugin.Tracker.ProjectedHpPercent:F2}%");
                     }
                     else
                     {
-                        ImGui.TextColored(new Vector4(1.0f, 1.0f, 1.0f, 1.0f), "--- Prediction ---");
-
                         ImGui.TextColored(plugin.Configuration.OnTrackColor.ToVector4(), $"[ON TRACK]\nProjected Health: {plugin.Tracker.ProjectedHpPercent:F2}%");
                     }
                 }
