@@ -95,6 +95,8 @@ namespace ThresholdChecker
         public SerializableColor OnTrackColor { get; set; } = new SerializableColor(0.1f, 0.7f, 0.2f, 1.0f);
         public SerializableColor BehindColor { get; set; } = new SerializableColor(1.0f, 0.35f, 0.1f, 1.0f);
 
+        public bool UseSimplifiedView { get; set; } = false;
+
         public void Save()
         {
             Service.PluginInterface.SavePluginConfig(this);
