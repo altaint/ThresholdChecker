@@ -69,8 +69,7 @@ public class TabEncounters : IDisposable
                 if (newDutyIndex != selectedDutyIndex)
                 {
                     selectedDutyIndex = newDutyIndex;
-                    selectedTargetIndex = -1;
-                    selectedConfigIndex = -1;
+                    AutoSelectFirstTargetAndConfigForDuty();
                 }
             }
 
@@ -81,6 +80,7 @@ public class TabEncounters : IDisposable
                 {
                     configuration.Duties.RemoveAt(selectedDutyIndex);
                     configuration.Save();
+
                     if (configuration.Duties.Count == 0)
                     {
                         selectedDutyIndex = -1;
@@ -90,8 +90,7 @@ public class TabEncounters : IDisposable
                     else
                     {
                         selectedDutyIndex = Math.Clamp(selectedDutyIndex, 0, configuration.Duties.Count - 1);
-                        selectedTargetIndex = -1;
-                        selectedConfigIndex = -1;
+                        AutoSelectFirstTargetAndConfigForDuty();
                     }
                 }
             }
@@ -161,8 +160,7 @@ public class TabEncounters : IDisposable
                 configuration.Duties.Add(newDuty);
 
                 selectedDutyIndex = configuration.Duties.Count - 1;
-                selectedTargetIndex = -1;
-                selectedConfigIndex = -1;
+                AutoSelectFirstTargetAndConfigForDuty();
                 newSelectedDutyId = 0;
                 dutySearchFilter = "";
                 configuration.Save();
@@ -219,8 +217,7 @@ public class TabEncounters : IDisposable
                 configuration.Duties.Add(newDuty);
 
                 selectedDutyIndex = configuration.Duties.Count - 1;
-                selectedTargetIndex = -1;
-                selectedConfigIndex = -1;
+                AutoSelectFirstTargetAndConfigForDuty();
                 newSelectedDutyId = 0;
                 dutySearchFilter = "";
                 configuration.Save();
@@ -248,7 +245,7 @@ public class TabEncounters : IDisposable
         if (selectedTargetIndex >= currentDuty.Targets.Count)
         {
             selectedTargetIndex = Math.Max(-1, currentDuty.Targets.Count - 1);
-            selectedConfigIndex = -1;
+            AutoSelectFirstConfigForCurrentTarget();
         }
 
         ImGui.Text($"Select Target for {currentDuty.DutyName}:");
@@ -274,7 +271,7 @@ public class TabEncounters : IDisposable
                 if (newTargetIndex != selectedTargetIndex)
                 {
                     selectedTargetIndex = newTargetIndex;
-                    selectedConfigIndex = -1;
+                    AutoSelectFirstConfigForCurrentTarget();
                 }
             }
 
@@ -293,7 +290,7 @@ public class TabEncounters : IDisposable
                     else
                     {
                         selectedTargetIndex = Math.Clamp(selectedTargetIndex, 0, currentDuty.Targets.Count - 1);
-                        selectedConfigIndex = -1;
+                        AutoSelectFirstConfigForCurrentTarget();
                     }
                 }
             }
@@ -375,7 +372,7 @@ public class TabEncounters : IDisposable
                 currentDuty.Targets.Add(new TargetConfig { TargetName = addName });
 
                 selectedTargetIndex = currentDuty.Targets.Count - 1;
-                selectedConfigIndex = -1;
+                AutoSelectFirstConfigForCurrentTarget();
                 newSelectedTargetId = 0;
                 targetSearchFilter = "";
                 configuration.Save();
@@ -431,7 +428,7 @@ public class TabEncounters : IDisposable
                 currentDuty.Targets.Add(new TargetConfig { TargetName = addName });
 
                 selectedTargetIndex = currentDuty.Targets.Count - 1;
-                selectedConfigIndex = -1;
+                AutoSelectFirstConfigForCurrentTarget();
                 newSelectedTargetId = 0;
                 targetSearchFilter = "";
                 configuration.Save();
@@ -643,6 +640,46 @@ public class TabEncounters : IDisposable
 
             ImGui.EndPopup();
         }
+    }
+
+    private void AutoSelectFirstTargetAndConfigForDuty()
+    {
+        if (selectedDutyIndex < 0 || selectedDutyIndex >= configuration.Duties.Count)
+        {
+            selectedTargetIndex = -1;
+            selectedConfigIndex = -1;
+            return;
+        }
+
+        var duty = configuration.Duties[selectedDutyIndex];
+        if (duty.Targets.Count == 0)
+        {
+            selectedTargetIndex = -1;
+            selectedConfigIndex = -1;
+            return;
+        }
+
+        selectedTargetIndex = 0;
+        AutoSelectFirstConfigForCurrentTarget();
+    }
+
+    private void AutoSelectFirstConfigForCurrentTarget()
+    {
+        if (selectedDutyIndex < 0 || selectedDutyIndex >= configuration.Duties.Count)
+        {
+            selectedConfigIndex = -1;
+            return;
+        }
+
+        var duty = configuration.Duties[selectedDutyIndex];
+        if (selectedTargetIndex < 0 || selectedTargetIndex >= duty.Targets.Count)
+        {
+            selectedConfigIndex = -1;
+            return;
+        }
+
+        var target = duty.Targets[selectedTargetIndex];
+        selectedConfigIndex = target.Configurations.Count > 0 ? 0 : -1;
     }
 
     public void OnOpen()
