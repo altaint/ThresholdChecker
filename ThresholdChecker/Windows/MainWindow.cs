@@ -11,25 +11,36 @@ namespace ThresholdChecker.Windows
     {
         private readonly Plugin plugin;
         private readonly MainWindowDetailed detailedView;
-        private readonly MainWindowSimplified simplifiedView;
+        private readonly MainWindowCompact compactView;
         private readonly MainWindowInactive inactiveView;
-        private bool useSimplifiedView = false;
-        private bool lastViewState = false;
+        private readonly MainWindowBar barView;
         private bool lastTrackingState = false;
 
-        private const float DetailedMinHeight = 375f;
-        private const float SimplifiedMinHeight = 195f;
+        private MainLayout selectedLayout;
+        private MainLayout lastLayoutState;
+
+        private const float DetailedMinHeight = 300f;
+        private const float CompactMinHeight = 150f;
+        private const float BarMinHeight = 185f;
+        private const float BarMinWidth = 400f;
         private const float MinWidth = 250f;
+
+        private static readonly string[] LayoutOptions = { "Detailed", "Compact", "Bar" };
 
         public MainWindow(Plugin plugin)
             : base("Threshold Checker###Threshold Checker", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
         {
             this.plugin = plugin;
             this.detailedView = new MainWindowDetailed(plugin);
-            this.simplifiedView = new MainWindowSimplified(plugin);
+            this.compactView = new MainWindowCompact(plugin);
+            this.barView = new MainWindowBar(plugin);
             this.inactiveView = new MainWindowInactive();
-            this.useSimplifiedView = plugin.Configuration.UseSimplifiedView;
 
+            selectedLayout = Enum.IsDefined(plugin.Configuration.SelectedMainLayout)
+                ? plugin.Configuration.SelectedMainLayout
+                : MainLayout.Detailed;
+
+            lastLayoutState = selectedLayout;
             UpdateWindowConstraints();
         }
 
@@ -37,64 +48,76 @@ namespace ThresholdChecker.Windows
 
         private void UpdateWindowConstraints()
         {
-            if (plugin.Tracker.IsTracking && useSimplifiedView)
-            {
-                SizeConstraints = new WindowSizeConstraints
-                {
-                    MinimumSize = new Vector2(MinWidth, SimplifiedMinHeight),
-                    MaximumSize = new Vector2(MinWidth, SimplifiedMinHeight)
-                };
-            }
-            else if (plugin.Tracker.IsTracking)
+            if (!plugin.Tracker.IsTracking)
             {
                 SizeConstraints = new WindowSizeConstraints
                 {
                     MinimumSize = new Vector2(MinWidth, DetailedMinHeight),
                     MaximumSize = new Vector2(float.MaxValue, DetailedMinHeight)
                 };
+                return;
             }
-            else
+
+            switch (selectedLayout)
             {
-                SizeConstraints = new WindowSizeConstraints
-                {
-                    MinimumSize = new Vector2(MinWidth, DetailedMinHeight),
-                    MaximumSize = new Vector2(float.MaxValue, DetailedMinHeight)
-                };
+                case MainLayout.Compact:
+                    SizeConstraints = new WindowSizeConstraints
+                    {
+                        MinimumSize = new Vector2(MinWidth, CompactMinHeight),
+                        MaximumSize = new Vector2(MinWidth, CompactMinHeight)
+                    };
+                    break;
+
+                case MainLayout.Bar:
+                    SizeConstraints = new WindowSizeConstraints
+                    {
+                        MinimumSize = new Vector2(BarMinWidth, BarMinHeight),
+                        MaximumSize = new Vector2(float.MaxValue, BarMinHeight)
+                    };
+                    break;
+
+                case MainLayout.Detailed:
+                default:
+                    SizeConstraints = new WindowSizeConstraints
+                    {
+                        MinimumSize = new Vector2(MinWidth, DetailedMinHeight),
+                        MaximumSize = new Vector2(float.MaxValue, DetailedMinHeight)
+                    };
+                    break;
             }
         }
 
         public override void PreDraw()
         {
-            WindowName = plugin.Tracker.IsTracking 
-                ? $"Threshold Checker - {plugin.Tracker.TrackedTargetName}###Threshold Checker" 
+            WindowName = plugin.Tracker.IsTracking
+                ? $"Threshold Checker - {plugin.Tracker.TrackedTargetName}###Threshold Checker"
                 : "Threshold Checker###Threshold Checker";
 
             if (plugin.Tracker.IsTracking != lastTrackingState)
             {
                 lastTrackingState = plugin.Tracker.IsTracking;
-                
+
                 if (!plugin.Tracker.IsTracking)
                 {
                     Size = new Vector2(Size?.X ?? MinWidth, DetailedMinHeight);
                 }
-                
+
                 UpdateWindowConstraints();
                 return;
             }
 
-            if (useSimplifiedView != lastViewState && plugin.Tracker.IsTracking)
+            if (selectedLayout != lastLayoutState && plugin.Tracker.IsTracking)
             {
-                lastViewState = useSimplifiedView;
-                
-                if (useSimplifiedView)
+                lastLayoutState = selectedLayout;
+
+                float targetHeight = selectedLayout switch
                 {
-                    Size = new Vector2(Size?.X ?? MinWidth, SimplifiedMinHeight);
-                }
-                else
-                {
-                    Size = new Vector2(Size?.X ?? MinWidth, DetailedMinHeight);
-                }
-                
+                    MainLayout.Compact => CompactMinHeight,
+                    MainLayout.Bar => BarMinHeight,
+                    _ => DetailedMinHeight
+                };
+
+                Size = new Vector2(Size?.X ?? MinWidth, targetHeight);
                 UpdateWindowConstraints();
             }
         }
@@ -117,29 +140,29 @@ namespace ThresholdChecker.Windows
             var itemSpacing = ImGui.GetStyle().ItemSpacing.X;
             var windowPadding = ImGui.GetStyle().WindowPadding.X;
 
-            float buttonsWidth = buttonSize.X + windowPadding;
-            
-            if (plugin.Tracker.IsTracking)
-            {
-                buttonsWidth += buttonSize.X * 2 + itemSpacing * 2;
-            }
+            int buttonCount = plugin.Tracker.IsTracking ? 4 : 2;
+            float buttonsWidth = (buttonCount * buttonSize.X) + ((buttonCount - 1) * itemSpacing) + windowPadding;
 
             ImGui.SameLine(ImGui.GetWindowWidth() - buttonsWidth);
-            
+
             if (plugin.Tracker.IsTracking)
             {
-                if (MainWindowHelper.DrawViewDropdown(buttonSize, ref useSimplifiedView))
+                int currentLayoutIndex = (int)selectedLayout;
+                if (MainWindowHelper.DrawViewDropdown(buttonSize, LayoutOptions, ref currentLayoutIndex))
                 {
-                    plugin.Configuration.UseSimplifiedView = useSimplifiedView;
+                    selectedLayout = (MainLayout)currentLayoutIndex;
+                    plugin.Configuration.SelectedMainLayout = selectedLayout;
                     plugin.Configuration.Save();
                     UpdateWindowConstraints();
                 }
+
                 ImGui.SameLine();
-                
                 MainWindowHelper.DrawPrintToChatButton(plugin, buttonSize);
                 ImGui.SameLine();
             }
-            
+
+            MainWindowHelper.DrawTrackingToggleButton(plugin, buttonSize);
+            ImGui.SameLine();
             MainWindowHelper.DrawConfigButton(plugin, buttonSize);
 
             ImGui.Spacing();
@@ -148,27 +171,23 @@ namespace ThresholdChecker.Windows
 
             if (plugin.Tracker.IsTracking)
             {
-                if (useSimplifiedView)
+                switch (selectedLayout)
                 {
-                    simplifiedView.Draw();
-                }
-                else
-                {
-                    detailedView.Draw();
+                    case MainLayout.Compact:
+                        compactView.Draw();
+                        break;
+                    case MainLayout.Bar:
+                        barView.Draw();
+                        break;
+                    case MainLayout.Detailed:
+                    default:
+                        detailedView.Draw();
+                        break;
                 }
             }
             else
             {
                 inactiveView.Draw();
-            }
-
-            ImGui.Separator();
-            ImGui.Spacing();
-
-            var buttonText = plugin.Tracker.IsTracking ? "Stop Tracking" : "Start Tracking Target";
-            if (ImGui.Button(buttonText, new Vector2(-1, 30)))
-            {
-                plugin.Tracker.ToggleTracking();
             }
 
             if (!string.IsNullOrEmpty(plugin.Tracker.ErrorMessage))

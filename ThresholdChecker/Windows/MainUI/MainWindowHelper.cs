@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Numerics;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
@@ -156,44 +157,66 @@ namespace ThresholdChecker.Windows.MainUI
             return clicked;
         }
 
-        public static bool DrawViewDropdown(Vector2 buttonSize, ref bool useSimplifiedView)
+        public static bool DrawViewDropdown(Vector2 buttonSize, IReadOnlyList<string> viewOptions, ref int currentView)
         {
-            string[] viewOptions = { "Detailed", "Simplified" };
-            int currentView = useSimplifiedView ? 1 : 0;
-            
             ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(4, 2));
             ImGui.PushFont(UiBuilder.IconFont);
             var dropdownText = $"{FontAwesomeIcon.ChevronDown.ToIconString()}";
             ImGui.Button(dropdownText, buttonSize);
             ImGui.PopFont();
             ImGui.PopStyleVar();
-            
+
             if (ImGui.IsItemHovered())
             {
                 ImGui.SetTooltip("Click to select a layout");
             }
-            
+
             bool viewChanged = false;
-            
+
             if (ImGui.IsItemClicked())
             {
-                ImGui.OpenPopup("ViewDropdown");
+                ImGui.OpenPopup("ViewDropdown##MainWindow");
             }
-            
-            if (ImGui.BeginPopup("ViewDropdown"))
+
+            if (ImGui.BeginPopup("ViewDropdown##MainWindow"))
             {
-                for (int i = 0; i < viewOptions.Length; i++)
+                for (int i = 0; i < viewOptions.Count; i++)
                 {
                     if (ImGui.Selectable(viewOptions[i], currentView == i))
                     {
-                        useSimplifiedView = i == 1;
+                        currentView = i;
                         viewChanged = true;
                     }
                 }
                 ImGui.EndPopup();
             }
-            
+
             return viewChanged;
+        }
+
+        public static void DrawTrackingToggleButton(Plugin plugin, Vector2 buttonSize)
+        {
+            ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(4, 2));
+            ImGui.PushFont(UiBuilder.IconFont);
+
+            var trackingButtonText = plugin.Tracker.IsTracking
+                ? FontAwesomeIcon.Stop.ToIconString()
+                : FontAwesomeIcon.Play.ToIconString();
+
+            ImGui.Button(trackingButtonText, buttonSize);
+
+            ImGui.PopFont();
+            ImGui.PopStyleVar();
+
+            if (ImGui.IsItemHovered())
+            {
+                ImGui.SetTooltip(plugin.Tracker.IsTracking ? "Stop tracking" : "Start tracking target");
+            }
+
+            if (ImGui.IsItemClicked())
+            {
+                plugin.Tracker.ToggleTracking();
+            }
         }
     }
 }

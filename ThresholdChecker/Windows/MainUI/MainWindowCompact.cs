@@ -5,11 +5,11 @@ using Dalamud.Interface;
 
 namespace ThresholdChecker.Windows.MainUI
 {
-    public class MainWindowSimplified
+    public class MainWindowCompact
     {
         private readonly Plugin plugin;
 
-        public MainWindowSimplified(Plugin plugin)
+        public MainWindowCompact(Plugin plugin)
         {
             this.plugin = plugin;
         }

@@ -2,6 +2,7 @@ using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace ThresholdChecker
@@ -16,6 +17,9 @@ namespace ThresholdChecker
     public sealed class CombatTracker
     {
         private readonly Configuration configuration;
+        private readonly List<ThresholdResult> evaluatedThresholdResults = new();
+
+        public IReadOnlyList<ThresholdResult> EvaluatedThresholdResults => evaluatedThresholdResults;
 
         public bool IsTracking => isTracking;
         public string TrackedTargetName { get; private set; } = "None";
@@ -59,6 +63,7 @@ namespace ThresholdChecker
                 LastEvaluatedThreshold = null;
                 CurrentTargetConfig = null;
                 CurrentKillTimeConfig = null;
+                evaluatedThresholdResults.Clear();
                 return;
             }
 
@@ -81,7 +86,8 @@ namespace ThresholdChecker
             trackedObjectId = target.GameObjectId;
             TrackedTargetName = target.Name.ToString();
 
-            CurrentTargetConfig = currentDutyConfig.Targets.FirstOrDefault(t => string.Equals(t.TargetName, TrackedTargetName, StringComparison.OrdinalIgnoreCase));
+            CurrentTargetConfig = currentDutyConfig.Targets.FirstOrDefault(t =>
+                string.Equals(t.TargetName, TrackedTargetName, StringComparison.OrdinalIgnoreCase));
 
             if (CurrentTargetConfig == null)
             {
@@ -101,6 +107,7 @@ namespace ThresholdChecker
             LastEvaluatedThreshold = null;
             ProjectedHpPercent = 100.0;
             CurrentPace = PacingState.OnTrack;
+            evaluatedThresholdResults.Clear();
         }
 
         public void TogglePhase(bool isPhase2)
@@ -113,6 +120,7 @@ namespace ThresholdChecker
                 NextThreshold = null;
                 ProjectedHpPercent = 100.0;
                 CurrentPace = PacingState.OnTrack;
+                evaluatedThresholdResults.Clear();
             }
         }
 
@@ -137,11 +145,11 @@ namespace ThresholdChecker
                 {
                     NextThreshold = null;
                     LastEvaluatedThreshold = null;
-
                     LastResult = null;
                     ProjectedHpPercent = 100.0;
                     CurrentPace = PacingState.OnTrack;
                     CurrentHpPercent = 100.0;
+                    evaluatedThresholdResults.Clear();
                 }
             }
 
@@ -193,9 +201,10 @@ namespace ThresholdChecker
 
             if (isTracking && inCombat && CombatDuration.TotalSeconds > 3 && CurrentKillTimeConfig != null)
             {
-                var activeThresholds = IsPhase2 
-                    ? CurrentKillTimeConfig.Phase2Thresholds 
+                var activeThresholds = IsPhase2
+                    ? CurrentKillTimeConfig.Phase2Thresholds
                     : CurrentKillTimeConfig.Phase1Thresholds;
+
                 var thresholds = activeThresholds.OrderBy(t => t.TotalSeconds).ToList();
                 var currentNext = thresholds.FirstOrDefault(t => t.TotalSeconds > CombatDuration.TotalSeconds);
 
@@ -208,6 +217,8 @@ namespace ThresholdChecker
                             Threshold = LastEvaluatedThreshold,
                             ActualHpAtThreshold = CurrentHpPercent
                         };
+
+                        AddOrUpdateEvaluatedResult(LastResult);
                     }
                 }
 
@@ -239,6 +250,18 @@ namespace ThresholdChecker
             }
         }
 
+        private void AddOrUpdateEvaluatedResult(ThresholdResult result)
+        {
+            int index = evaluatedThresholdResults.FindIndex(r =>
+                r.Threshold.TotalSeconds == result.Threshold.TotalSeconds &&
+                Math.Abs(r.Threshold.TargetHpPercent - result.Threshold.TargetHpPercent) < 0.001);
+
+            if (index >= 0)
+                evaluatedThresholdResults[index] = result;
+            else
+                evaluatedThresholdResults.Add(result);
+        }
+
         public void OnTerritoryChanged(uint territoryId)
         {
             if (isTracking)
@@ -255,6 +278,7 @@ namespace ThresholdChecker
                 ProjectedHpPercent = 100.0;
                 CurrentPace = PacingState.OnTrack;
                 IsPhase2 = false;
+                evaluatedThresholdResults.Clear();
             }
         }
     }
