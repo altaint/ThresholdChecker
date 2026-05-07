@@ -26,12 +26,12 @@ namespace ThresholdChecker.Windows.MainUI
                 string statusText;
                 double difference = plugin.Tracker.LastResult.Difference;
 
-                if (plugin.Tracker.CurrentPace == PacingState.Behind)
+                if (difference > 0)
                 {
                     statusColor = plugin.Configuration.BehindColor.ToVector4();
                     statusText = $"(BEHIND +{difference:F2}%)";
                 }
-                else if (plugin.Tracker.CurrentPace == PacingState.TooFast)
+                else if (difference < 0)
                 {
                     statusColor = plugin.Configuration.TooFastColor.ToVector4();
                     statusText = $"(TOO FAST {difference:F2}%)";

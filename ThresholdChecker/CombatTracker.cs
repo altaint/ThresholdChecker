@@ -33,7 +33,7 @@ namespace ThresholdChecker
 
         public ThresholdPhase? NextThreshold { get; private set; }
         public double ProjectedHpPercent { get; private set; } = 100.0;
-        public PacingState CurrentPace { get; private set; } = PacingState.OnTrack;
+        public PacingState PredictedPace { get; private set; } = PacingState.OnTrack;
 
         public ThresholdResult? LastResult { get; private set; }
         public ThresholdPhase? LastEvaluatedThreshold { get; private set; }
@@ -106,7 +106,7 @@ namespace ThresholdChecker
             LastResult = null;
             LastEvaluatedThreshold = null;
             ProjectedHpPercent = 100.0;
-            CurrentPace = PacingState.OnTrack;
+            PredictedPace = PacingState.OnTrack;
             evaluatedThresholdResults.Clear();
         }
 
@@ -119,7 +119,7 @@ namespace ThresholdChecker
                 LastEvaluatedThreshold = null;
                 NextThreshold = null;
                 ProjectedHpPercent = 100.0;
-                CurrentPace = PacingState.OnTrack;
+                PredictedPace = PacingState.OnTrack;
                 evaluatedThresholdResults.Clear();
             }
         }
@@ -147,7 +147,7 @@ namespace ThresholdChecker
                     LastEvaluatedThreshold = null;
                     LastResult = null;
                     ProjectedHpPercent = 100.0;
-                    CurrentPace = PacingState.OnTrack;
+                    PredictedPace = PacingState.OnTrack;
                     CurrentHpPercent = 100.0;
                     evaluatedThresholdResults.Clear();
                 }
@@ -236,15 +236,15 @@ namespace ThresholdChecker
 
                     if (ProjectedHpPercent > NextThreshold.TargetHpPercent + CurrentTargetConfig!.TolerancePercent)
                     {
-                        CurrentPace = PacingState.Behind;
+                        PredictedPace = PacingState.Behind;
                     }
                     else if (ProjectedHpPercent < NextThreshold.TargetHpPercent - CurrentTargetConfig!.TolerancePercent)
                     {
-                        CurrentPace = PacingState.TooFast;
+                        PredictedPace = PacingState.TooFast;
                     }
                     else
                     {
-                        CurrentPace = PacingState.OnTrack;
+                        PredictedPace = PacingState.OnTrack;
                     }
                 }
             }
@@ -276,7 +276,7 @@ namespace ThresholdChecker
                 CurrentKillTimeConfig = null;
                 ErrorMessage = string.Empty;
                 ProjectedHpPercent = 100.0;
-                CurrentPace = PacingState.OnTrack;
+                PredictedPace = PacingState.OnTrack;
                 IsPhase2 = false;
                 evaluatedThresholdResults.Clear();
             }

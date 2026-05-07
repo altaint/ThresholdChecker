@@ -58,11 +58,11 @@ namespace ThresholdChecker.Windows.MainUI
 
                 ImGui.TextColored(new Vector4(1.0f, 1.0f, 1.0f, 1.0f), "--- Prediction ---");
 
-                if (plugin.Tracker.CurrentPace == PacingState.Behind)
+                if (plugin.Tracker.PredictedPace == PacingState.Behind)
                 {
                     ImGui.TextColored(plugin.Configuration.BehindColor.ToVector4(), $"[BEHIND]\nProjected Health: {plugin.Tracker.ProjectedHpPercent:F2}%");
                 }
-                else if (plugin.Tracker.CurrentPace == PacingState.TooFast)
+                else if (plugin.Tracker.PredictedPace == PacingState.TooFast)
                 {
                     ImGui.TextColored(plugin.Configuration.TooFastColor.ToVector4(), $"[TOO FAST]\nProjected Health: {plugin.Tracker.ProjectedHpPercent:F2}%");
                 }

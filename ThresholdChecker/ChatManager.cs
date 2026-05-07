@@ -32,7 +32,7 @@ namespace ThresholdChecker
                 return;
             }
 
-            string chatMessage = plugin.Tracker.CurrentPace switch
+            string chatMessage = plugin.Tracker.PredictedPace switch
             {
                 PacingState.TooFast => plugin.Configuration?.TooFastMessage ?? "Too Fast",
                 PacingState.Behind => plugin.Configuration?.BehindMessage ?? "Behind",
