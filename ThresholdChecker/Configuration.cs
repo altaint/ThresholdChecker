@@ -53,6 +53,7 @@ namespace ThresholdChecker
         public string TargetName { get; set; } = "Unknown";
         public double TolerancePercent { get; set; } = 3.0;
         public List<Configurations> Configurations { get; set; } = new();
+        public string SelectedConfigurationName { get; set; } = string.Empty;
     }
 
     [Serializable]

@@ -10,21 +10,66 @@ namespace ThresholdChecker.Windows.MainUI
     {
         public static void DrawConfigurationHeader(Plugin plugin)
         {
-            ImGui.Text("Configuration: ");
+            ImGui.Text("Configuration:");
             ImGui.SameLine();
-            
-            if (plugin.Tracker.CurrentKillTimeConfig != null)
+
+            var currentTargetConfig = plugin.Tracker.CurrentTargetConfig;
+            var currentConfig = plugin.Tracker.CurrentKillTimeConfig;
+
+            var style = ImGui.GetStyle();
+            float rightPadding = 16f;
+            float phase2CheckSize = ImGui.CalcTextSize("Phase 2").X + style.FramePadding.X * 2;
+            float spacing = style.ItemSpacing.X;
+
+            float availableForCombo = ImGui.GetWindowWidth()
+                                      - ImGui.GetCursorPosX()
+                                      - phase2CheckSize
+                                      - spacing
+                                      - rightPadding;
+
+            float comboWidth = Math.Clamp(availableForCombo, 80f, 140f);
+
+            if (currentTargetConfig != null && currentTargetConfig.Configurations.Count > 0)
             {
-                ImGui.TextColored(new Vector4(0.7f, 0.9f, 1.0f, 1.0f), $"[{plugin.Tracker.CurrentKillTimeConfig.ConfigurationName}]");
+                string preview = currentConfig?.ConfigurationName ?? "-- Select --";
+
+                ImGui.SetNextItemWidth(comboWidth);
+                if (ImGui.BeginCombo("##MainWindowConfigCombo", preview))
+                {
+                    for (int i = 0; i < currentTargetConfig.Configurations.Count; i++)
+                    {
+                        var config = currentTargetConfig.Configurations[i];
+                        bool isSelected = currentConfig != null &&
+                                          string.Equals(
+                                              config.ConfigurationName,
+                                              currentConfig.ConfigurationName,
+                                              StringComparison.Ordinal);
+
+                        if (ImGui.Selectable(config.ConfigurationName, isSelected))
+                        {
+                            if (plugin.Tracker.SetCurrentConfiguration(config.ConfigurationName))
+                            {
+                                plugin.Configuration.Save();
+                            }
+                        }
+
+                        if (isSelected)
+                        {
+                            ImGui.SetItemDefaultFocus();
+                        }
+                    }
+
+                    ImGui.EndCombo();
+                }
             }
             else
             {
                 ImGui.TextColored(new Vector4(1.0f, 0.0f, 0.0f, 1.0f), "None");
             }
 
-            var phase2CheckSize = ImGui.CalcTextSize("Phase 2").X + ImGui.GetStyle().FramePadding.X * 2;
-            ImGui.SameLine(ImGui.GetWindowWidth() - phase2CheckSize - 16f);
-            
+            var phase2PosX = ImGui.GetWindowWidth() - phase2CheckSize - rightPadding;
+            ImGui.SameLine(Math.Max(ImGui.GetCursorPosX() + 1f, phase2PosX));
+
             ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(0, 0));
             bool isP2 = plugin.Tracker.IsPhase2;
             if (ImGui.Checkbox("Phase 2", ref isP2))

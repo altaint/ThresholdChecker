@@ -35,6 +35,7 @@ namespace ThresholdChecker
         public double ProjectedHpPercent { get; private set; } = 100.0;
         public PacingState PredictedPace { get; private set; } = PacingState.OnTrack;
 
+
         public ThresholdResult? LastResult { get; private set; }
         public ThresholdPhase? LastEvaluatedThreshold { get; private set; }
 
@@ -95,12 +96,26 @@ namespace ThresholdChecker
                 return;
             }
 
-            CurrentKillTimeConfig = CurrentTargetConfig.Configurations.FirstOrDefault();
+            CurrentKillTimeConfig = null;
+
+            if (!string.IsNullOrWhiteSpace(CurrentTargetConfig.SelectedConfigurationName))
+            {
+                CurrentKillTimeConfig = CurrentTargetConfig.Configurations.FirstOrDefault(c =>
+                    string.Equals(
+                        c.ConfigurationName,
+                        CurrentTargetConfig.SelectedConfigurationName,
+                        StringComparison.OrdinalIgnoreCase));
+            }
+
+            CurrentKillTimeConfig ??= CurrentTargetConfig.Configurations.FirstOrDefault();
+
             if (CurrentKillTimeConfig == null)
             {
                 ErrorMessage = $"No configurations found for '{TrackedTargetName}'!";
                 return;
             }
+
+            CurrentTargetConfig.SelectedConfigurationName = CurrentKillTimeConfig.ConfigurationName;
 
             isTracking = true;
             LastResult = null;
@@ -108,6 +123,30 @@ namespace ThresholdChecker
             ProjectedHpPercent = 100.0;
             PredictedPace = PacingState.OnTrack;
             evaluatedThresholdResults.Clear();
+        }
+
+        public bool SetCurrentConfiguration(string configurationName)
+        {
+            if (CurrentTargetConfig == null || string.IsNullOrWhiteSpace(configurationName))
+                return false;
+
+            var newConfig = CurrentTargetConfig.Configurations.FirstOrDefault(c =>
+                string.Equals(c.ConfigurationName, configurationName, StringComparison.OrdinalIgnoreCase));
+
+            if (newConfig == null || ReferenceEquals(CurrentKillTimeConfig, newConfig))
+                return false;
+
+            CurrentKillTimeConfig = newConfig;
+            CurrentTargetConfig.SelectedConfigurationName = newConfig.ConfigurationName;
+
+            LastResult = null;
+            LastEvaluatedThreshold = null;
+            NextThreshold = null;
+            ProjectedHpPercent = 100.0;
+            PredictedPace = PacingState.OnTrack;
+            evaluatedThresholdResults.Clear();
+
+            return true;
         }
 
         public void TogglePhase(bool isPhase2)
